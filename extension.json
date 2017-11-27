@@ -1,0 +1,20 @@
+{
+	"name": "DocBookExport",
+	"version": "0.0.0",
+	"author": [
+		"Nischayn22",
+		"WikiWorks"
+	],
+	"url": "https://www.mediawiki.org/wiki/Extension:DocBookExport",
+	"license-name": "MIT",
+	"type": "other",
+	"AutoloadClasses": {
+		"DocBookExport": "DocBookExport.php"
+	},
+	"Hooks": {
+		"ParserFirstCallInit": [
+			"DocBookExport::onParserSetup"
+		]
+	},
+	"manifest_version": 1
+}
