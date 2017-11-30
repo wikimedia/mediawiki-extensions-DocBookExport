@@ -103,9 +103,9 @@ class DocBookExportAPI extends ApiBase {
 			}
 		}
 		$book_contents .= '</book>';
-		$file_path = $dir . str_replace(' ', '_', $options['title']) .".db";
+		$file_path = $dir . str_replace(' ', '_', $options['title']) .".xml";
 		file_put_contents($file_path, $book_contents);
-		$file_server_path = $wgScriptPath . '/extensions/DocBookExport/' . str_replace(' ', '_', $options['title']) .".db";
+		$file_server_path = $wgScriptPath . '/extensions/DocBookExport/' . str_replace(' ', '_', $options['title']) .".xml";
 		header('Location: '.$file_server_path);
 	}
 
