@@ -9,12 +9,19 @@
 	"license-name": "MIT",
 	"type": "other",
 	"AutoloadClasses": {
-		"DocBookExport": "DocBookExport.php"
+		"DocBookExport": "DocBookExport.php",
+		"DocBookExportAPI": "DocBookExportAPI.php"
+	},
+	"config": {
+		"DocBookExportPandocPath": "pandoc"
 	},
 	"Hooks": {
 		"ParserFirstCallInit": [
 			"DocBookExport::onParserSetup"
 		]
+	},
+	"APIModules": {
+		"getdocbook": "DocBookExportAPI"
 	},
 	"manifest_version": 1
 }
