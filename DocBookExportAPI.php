@@ -34,9 +34,6 @@ class DocBookExportAPI extends ApiBase {
 
 		$book_contents .= '<title>' . $options['title'] . '</title>';
 
-		$chapter_number = 0;
-		$section_number = 'a';
-
 		$page_structure = explode("\n", $options['page structure']);
 		$dir = __DIR__ . '/';
 		foreach($page_structure as $current_line) {
@@ -48,10 +45,9 @@ class DocBookExportAPI extends ApiBase {
 			$after_identifier = $parts[1];
 
 			if ($identifier == '*'){
-				$book_contents .= '<chapter label="'. $chapter_number++ .'">';
+				$book_contents .= '<chapter>';
 			} else if ($identifier == '**') {
-				$book_contents .= '<section label="'. $chapter_number . $section_number .'">';
-				$section_number++;
+				$book_contents .= '<section>';
 			} else {
 				continue;
 			}

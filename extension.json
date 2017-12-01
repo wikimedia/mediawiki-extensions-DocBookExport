@@ -23,5 +23,8 @@
 	"APIModules": {
 		"getdocbook": "DocBookExportAPI"
 	},
+	"ExtensionMessagesFiles": {
+		"DocBookExportMagic": "DocBookExport.i18n.magic.php"
+	},
 	"manifest_version": 1
 }

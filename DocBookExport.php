@@ -10,7 +10,7 @@ class DocBookExport {
 
 	public static function parseDocBookSyntaxParserFunction( &$parser ) {
 		$options = extractOptions( array_slice(func_get_args(), 1) );
-		return self::parseDocBookSyntax($parser, $options);
+		return array( self::parseDocBookSyntax($parser, $options), 'noparse' => true, 'isHTML' => true );
 	}
 
 	public static function parseDocBookSyntaxTagExtension( $input, array $args, Parser $parser, PPFrame $frame ) {
