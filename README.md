@@ -20,7 +20,7 @@ Parser Function Example:
 
 {{#docbook:
 page structure=
-* Buying clothes intro,Buying shoes=Buying the right clothes
+* Buying the right clothes=Buying clothes intro,Buying shoes
 ** How I buy shoes
 |title=My Guide to Bowling
 }}
@@ -30,7 +30,7 @@ Tag Extension Example:
 
 
 <docbook title="My Guide to Bowling">
-* Buying clothes intro,Buying shoes=Buying the right clothes
+* Buying the right clothes=Buying clothes intro,Buying shoes
 ** How I buy shoes
 </docbook>
 

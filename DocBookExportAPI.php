@@ -50,11 +50,12 @@ class DocBookExportAPI extends ApiBase {
 			}
 
 			$parts = explode( '=', $after_identifier );
-			$wiki_pages = explode( ',', $parts[0] );
 
 			if ( count( $parts ) == 2 ) {
-				$display_pagename = $parts[1];
+				$wiki_pages = explode( ',', $parts[1] );
+				$display_pagename = $parts[0];
 			} else {
+				$wiki_pages = explode( ',', $parts[0] );
 				$display_pagename = $wiki_pages[0];
 			}
 
