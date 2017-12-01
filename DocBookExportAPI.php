@@ -12,10 +12,7 @@ class DocBookExportAPI extends ApiBase {
 	}
 
 	public function execute() {
-		global $DocBookExportPandocPath, $wgScriptPath;
-		if ( empty( $DocBookExportPandocPath ) ) {
-			$DocBookExportPandocPath = 'pandoc';
-		}
+		global $wgDocBookExportPandocPath, $wgScriptPath;
 
 		$bookName = $this->getMain()->getVal( 'bookname' );
 		$title = Title::newFromText( $bookName );
@@ -85,7 +82,7 @@ class DocBookExportAPI extends ApiBase {
 					}
 					$dir = str_replace( "\\", "/", $dir );
 					file_put_contents( $dir . "tmp.html", $dom->saveHTML() );
-					$cmd = $DocBookExportPandocPath . " ". $dir . "tmp.html -f html -t docbook5 2>&1";
+					$cmd = $wgDocBookExportPandocPath . " ". $dir . "tmp.html -f html -t docbook5 2>&1";
 					$pandoc_output = shell_exec( $cmd );
 					if ( $pandoc_output != null ) {
 						$book_contents .= $pandoc_output;
