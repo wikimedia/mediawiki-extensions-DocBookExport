@@ -8,5 +8,5 @@ $magicWords = array();
 
 /** English (English) */
 $magicWords['en'] = array(
-       'docbook' => array( 0, 'docbook' )
+	'docbook' => array( 0, 'docbook' )
 );

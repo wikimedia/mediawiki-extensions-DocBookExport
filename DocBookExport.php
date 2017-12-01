@@ -9,16 +9,16 @@ class DocBookExport {
 	}
 
 	public static function parseDocBookSyntaxParserFunction( &$parser ) {
-		$options = extractOptions( array_slice(func_get_args(), 1) );
-		return array( self::parseDocBookSyntax($parser, $options), 'noparse' => true, 'isHTML' => true );
+		$options = extractOptions( array_slice( func_get_args(), 1 ) );
+		return array( self::parseDocBookSyntax( $parser, $options ), 'noparse' => true, 'isHTML' => true );
 	}
 
 	public static function parseDocBookSyntaxTagExtension( $input, array $args, Parser $parser, PPFrame $frame ) {
 		$args['page structure'] = $input;
-		return self::parseDocBookSyntax($parser, $args);
+		return self::parseDocBookSyntax( $parser, $args );
 	}
 
-	public static function parseDocBookSyntax($parser, $options) {
+	public static function parseDocBookSyntax( $parser, $options ) {
 		global $wgScriptPath, $wgTitle;
 
         $serialized = serialize( $options );

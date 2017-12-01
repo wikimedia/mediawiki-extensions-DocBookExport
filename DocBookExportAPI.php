@@ -13,11 +13,11 @@ class DocBookExportAPI extends ApiBase {
 
 	public function execute() {
 		global $DocBookExportPandocPath, $wgScriptPath;
-		if (empty($DocBookExportPandocPath)) {
+		if ( empty( $DocBookExportPandocPath ) ) {
 			$DocBookExportPandocPath = 'pandoc';
 		}
 
-		$bookName = $this->getMain()->getVal('bookname');
+		$bookName = $this->getMain()->getVal( 'bookname' );
 		$title = Title::newFromText( $bookName );
 
 		$dbr = wfGetDB( DB_SLAVE );
@@ -34,75 +34,75 @@ class DocBookExportAPI extends ApiBase {
 
 		$book_contents .= '<title>' . $options['title'] . '</title>';
 
-		$page_structure = explode("\n", $options['page structure']);
+		$page_structure = explode( "\n", $options['page structure'] );
 		$dir = __DIR__ . '/';
-		foreach($page_structure as $current_line) {
-			$parts = explode(' ', $current_line, 2);
-			if (count($parts) < 2) {
+		foreach( $page_structure as $current_line ) {
+			$parts = explode( ' ', $current_line, 2 );
+			if ( count( $parts ) < 2 ) {
 				continue;
 			}
 			$identifier = $parts[0];
 			$after_identifier = $parts[1];
 
-			if ($identifier == '*'){
+			if ( $identifier == '*' ){
 				$book_contents .= '<chapter>';
-			} else if ($identifier == '**') {
+			} else if ( $identifier == '**' ) {
 				$book_contents .= '<section>';
 			} else {
 				continue;
 			}
 
-			$parts = explode('=', $after_identifier);
-			$wiki_pages = explode(',', $parts[0]);
+			$parts = explode( '=', $after_identifier );
+			$wiki_pages = explode( ',', $parts[0] );
 
-			if (count($parts) == 2) {
+			if ( count( $parts ) == 2 ) {
 				$display_pagename = $parts[1];
 			} else {
 				$display_pagename = $wiki_pages[0];
 			}
 
 			$book_contents .= '<title>'. $display_pagename .'</title>';
-			foreach($wiki_pages as $wikipage) {
+			foreach( $wiki_pages as $wikipage ) {
 				$titleObj = Title::newFromText( $wikipage );
 				$pageObj = WikiPage::factory( $titleObj );
 				$pageObj->loadPageData( 'fromdb' );
 				$titleObj = $pageObj->getTitle();
 				$content = $pageObj->getContent( Revision::RAW );
-				if ($content != null) {
+				if ( $content != null ) {
 					$popts = $pageObj->makeParserOptions( RequestContext::getMain() );
 					$popts->enableLimitReport( false );
 					$popts->setIsPreview( false );
 					$popts->setIsSectionPreview( false );
 					$popts->setEditSection( false );
 					$popts->setTidy( true );
-					$page_html = $pageObj->getParserOutput($popts)->getText();
+					$page_html = $pageObj->getParserOutput( $popts )->getText();
 					$dom = new DOMDocument();
 					$dom->loadHtml('<html>' . $page_html . '</html>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-					foreach(self::$excludedTags as $tag) {
-						foreach($dom->getElementsByTagName($tag) as $node) {
-							$node->parentNode->removeChild($node);
+					foreach( self::$excludedTags as $tag ) {
+						foreach( $dom->getElementsByTagName($tag) as $node ) {
+							$node->parentNode->removeChild( $node );
 						}
 					}
-					$dir = str_replace("\\", "/", $dir);
-					file_put_contents($dir . "tmp.html", $dom->saveHTML());
+					$dir = str_replace( "\\", "/", $dir );
+					file_put_contents( $dir . "tmp.html", $dom->saveHTML() );
 					$cmd = $DocBookExportPandocPath . " ". $dir . "tmp.html -f html -t docbook5 2>&1";
-					$pandoc_output = shell_exec($cmd);
-					if ($pandoc_output != null) {
+					$pandoc_output = shell_exec( $cmd );
+					if ( $pandoc_output != null ) {
 						$book_contents .= $pandoc_output;
 					}
 				}
 			}
-			if ($identifier == '*'){
+			if ( $identifier == '*' ){
 				$book_contents .= '</chapter>';
-			} else if ($identifier == '**') {
+			} else if ( $identifier == '**' ) {
 				$book_contents .= '</section>';
 			}
 		}
 		$book_contents .= '</book>';
-		$file_path = $dir . str_replace(' ', '_', $options['title']) .".xml";
-		file_put_contents($file_path, $book_contents);
-		$file_server_path = $wgScriptPath . '/extensions/DocBookExport/' . str_replace(' ', '_', $options['title']) .".xml";
-		header('Location: '.$file_server_path);
+		$file_path = $dir . str_replace( ' ', '_', $options['title'] ) .".xml";
+		file_put_contents( $file_path, $book_contents );
+		$file_server_path = $wgScriptPath . '/extensions/DocBookExport/' . str_replace( ' ', '_', $options['title'] ) .".xml";
+		header( 'Location: '.$file_server_path );
 	}
 
 	protected function getAllowedParams() {
