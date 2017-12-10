@@ -32,6 +32,30 @@ class DocBookExportAPI extends ApiBase {
 		$book_contents .= '<title>' . $options['title'] . '</title>';
 		$page_structure = explode( "\n", $options['page structure'] );
 
+		$index_terms = array();
+		if ( array_key_exists( 'index terms', $options ) ) {
+			$index_terms = explode( ",", $options['index terms'] );
+		}
+
+		$index_categories = array();
+		if ( array_key_exists( 'index term categories', $options ) ) {
+			$index_categories = explode( ",", $options['index term categories'] );
+		}
+
+		foreach( $index_categories as $index_category ) {
+			$categoryMembers = Category::newFromName( $index_category )->getMembers();
+			foreach( $categoryMembers as $index_title ) {
+				$index_terms[] = $index_title->getText();
+			}
+		}
+
+		$popts = new ParserOptions();
+		$popts->enableLimitReport( false );
+		$popts->setIsPreview( false );
+		$popts->setIsSectionPreview( false );
+		$popts->setEditSection( false );
+		$popts->setTidy( true );
+
 		foreach( $page_structure as $current_line ) {
 			$parts = explode( ' ', $current_line, 2 );
 			if ( count( $parts ) < 2 ) {
@@ -61,15 +85,13 @@ class DocBookExportAPI extends ApiBase {
 			$book_contents .= '<title>'. $display_pagename .'</title>';
 			foreach( $wiki_pages as $wikipage ) {
 				$titleObj = Title::newFromText( $wikipage );
-				$pageObj = WikiPage::factory( $titleObj );
-				$pageObj->loadPageData( 'fromdb' );
-				$popts = $pageObj->makeParserOptions( RequestContext::getMain() );
-				$popts->enableLimitReport( false );
-				$popts->setIsPreview( false );
-				$popts->setIsSectionPreview( false );
-				$popts->setEditSection( false );
-				$popts->setTidy( true );
-				$page_html = $pageObj->getParserOutput( $popts )->getText();
+				$pageObj = new WikiPage( $titleObj );
+				$parser_output = $pageObj->getContent( Revision::RAW )->getParserOutput( $titleObj, null, $popts );
+				if ( !$parser_output ) {
+					$this->getResult()->addValue( 'result', 'failed', 'Unable to get contents for page "' . $wikipage . '". Please check if the page exists.');
+					return;
+				}
+				$page_html = $parser_output->getText();
 
 				$dom = new DOMDocument();
 				$dom->loadHtml('<html>' . $page_html . '</html>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
@@ -86,9 +108,16 @@ class DocBookExportAPI extends ApiBase {
 				}
 				$cmd = $wgDocBookExportPandocPath . " ". $temp_file . " -f html -t docbook5 2>&1";
 				$pandoc_output = shell_exec( $cmd );
-				if ( $pandoc_output != null ) {
-					$book_contents .= $pandoc_output;
+
+				if ( !$pandoc_output ) {
+					$this->getResult()->addValue( 'result', 'failed', 'Unable to parse contents for page "' . $wikipage . '" using Pandoc. Please check if page contains invalid tags.');
+					return;
 				}
+				foreach( $index_terms as $index_term ) {
+					$index_term = trim($index_term);
+					$pandoc_output = str_replace( $index_term, $index_term . '<indexterm><primary>' . $index_term . '</primary></indexterm>', $pandoc_output );
+				}
+				$book_contents .= $pandoc_output;
 			}
 			if ( $identifier == '*' ){
 				$book_contents .= '</chapter>';
