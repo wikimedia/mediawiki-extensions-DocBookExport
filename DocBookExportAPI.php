@@ -30,9 +30,8 @@ class DocBookExportAPI extends ApiBase {
 		<book>';
 
 		$book_contents .= '<title>' . $options['title'] . '</title>';
-
 		$page_structure = explode( "\n", $options['page structure'] );
-		$dir = __DIR__ . '/';
+
 		foreach( $page_structure as $current_line ) {
 			$parts = explode( ' ', $current_line, 2 );
 			if ( count( $parts ) < 2 ) {
@@ -64,30 +63,31 @@ class DocBookExportAPI extends ApiBase {
 				$titleObj = Title::newFromText( $wikipage );
 				$pageObj = WikiPage::factory( $titleObj );
 				$pageObj->loadPageData( 'fromdb' );
-				$titleObj = $pageObj->getTitle();
-				$content = $pageObj->getContent( Revision::RAW );
-				if ( $content != null ) {
-					$popts = $pageObj->makeParserOptions( RequestContext::getMain() );
-					$popts->enableLimitReport( false );
-					$popts->setIsPreview( false );
-					$popts->setIsSectionPreview( false );
-					$popts->setEditSection( false );
-					$popts->setTidy( true );
-					$page_html = $pageObj->getParserOutput( $popts )->getText();
-					$dom = new DOMDocument();
-					$dom->loadHtml('<html>' . $page_html . '</html>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-					foreach( self::$excludedTags as $tag ) {
-						foreach( $dom->getElementsByTagName($tag) as $node ) {
-							$node->parentNode->removeChild( $node );
-						}
+				$popts = $pageObj->makeParserOptions( RequestContext::getMain() );
+				$popts->enableLimitReport( false );
+				$popts->setIsPreview( false );
+				$popts->setIsSectionPreview( false );
+				$popts->setEditSection( false );
+				$popts->setTidy( true );
+				$page_html = $pageObj->getParserOutput( $popts )->getText();
+
+				$dom = new DOMDocument();
+				$dom->loadHtml('<html>' . $page_html . '</html>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+
+				foreach( self::$excludedTags as $tag ) {
+					foreach( $dom->getElementsByTagName($tag) as $node ) {
+						$node->parentNode->removeChild( $node );
 					}
-					$dir = str_replace( "\\", "/", $dir );
-					file_put_contents( $dir . "tmp.html", $dom->saveHTML() );
-					$cmd = $wgDocBookExportPandocPath . " ". $dir . "tmp.html -f html -t docbook5 2>&1";
-					$pandoc_output = shell_exec( $cmd );
-					if ( $pandoc_output != null ) {
-						$book_contents .= $pandoc_output;
-					}
+				}
+
+				$temp_file = tempnam(sys_get_temp_dir(), 'docbook_html');
+				if ( !file_put_contents( $temp_file, $dom->saveHTML() ) ) {
+					$this->getResult()->addValue( 'result', 'failed', 'Unable to create or write to temporary file.' );
+				}
+				$cmd = $wgDocBookExportPandocPath . " ". $temp_file . " -f html -t docbook5 2>&1";
+				$pandoc_output = shell_exec( $cmd );
+				if ( $pandoc_output != null ) {
+					$book_contents .= $pandoc_output;
 				}
 			}
 			if ( $identifier == '*' ){
@@ -97,15 +97,19 @@ class DocBookExportAPI extends ApiBase {
 			}
 		}
 		$book_contents .= '</book>';
-		$file_path = $dir . str_replace( ' ', '_', $options['title'] ) .".xml";
-		file_put_contents( $file_path, $book_contents );
-		$file_server_path = $wgScriptPath . '/extensions/DocBookExport/' . str_replace( ' ', '_', $options['title'] ) .".xml";
-		header( 'Location: '.$file_server_path );
-	}
 
-	protected function getAllowedParams() {
-		return array(
-			'tables' => null,
-		);
+		header( 'Content-type: text/xml' );
+		header( 'Content-Disposition: attachment; filename="'. $options['title'] .'.xml"' );
+
+		// do not cache the file
+		header( 'Pragma: no-cache' );
+		header( 'Expires: 0' );
+
+		// create a file pointer connected to the output stream
+		$file = fopen( 'php://output', 'w' );
+
+		fwrite( $file, $book_contents );
+		fclose( $file );
+		exit();
 	}
 }

@@ -24,7 +24,9 @@ class DocBookExport {
         $serialized = serialize( $options );
         $parser->getOutput()->setProperty( 'docbook', $serialized );
 
-		return '<a target="_blank" href="' . $wgScriptPath . '/api.php?action=getdocbook&bookname='. $wgTitle->getText() .'">Open Docbook</a>';
+		$api_download_link = $wgScriptPath . '/api.php?action=getdocbook&bookname='. $wgTitle->getText();
+
+		return '<a href="' . $api_download_link .'">Download Docbook</a>';
 	}
 
 }
