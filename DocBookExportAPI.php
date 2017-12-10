@@ -84,13 +84,38 @@ class DocBookExportAPI extends ApiBase {
 
 			$book_contents .= '<title>'. $display_pagename .'</title>';
 			foreach( $wiki_pages as $wikipage ) {
+				$placeholderId = 0;
+				$footnotes = array();
 				$titleObj = Title::newFromText( $wikipage );
 				$pageObj = new WikiPage( $titleObj );
-				$parser_output = $pageObj->getContent( Revision::RAW )->getParserOutput( $titleObj, null, $popts );
-				if ( !$parser_output ) {
+
+				$content = $pageObj->getContent( Revision::RAW );
+				if ( !$content ) {
 					$this->getResult()->addValue( 'result', 'failed', 'Unable to get contents for page "' . $wikipage . '". Please check if the page exists.');
 					return;
 				}
+				$wikitext = $content->getNativeData();
+
+				preg_match_all( '/<ref ?.*>(.*)<\/ref>/', $wikitext, $matches );
+
+				if ( count($matches[1]) > 0 ) {
+					$footnotes = $matches[1];
+					$wikitext = preg_replace_callback(
+						'/<ref ?.*>(.*)<\/ref>/',
+						function( $matches ) use ( &$placeholderId ) {
+							return 'PLACEHOLDER-' . ++$placeholderId;
+						},
+						$wikitext
+					);
+					$content = new WikitextContent( $wikitext );
+				}
+
+				$parser_output = $content->getParserOutput( $titleObj, null, $popts );
+				if ( !$parser_output ) {
+					$this->getResult()->addValue( 'result', 'failed', 'Unable to parse wikitext for page "' . $wikipage . '". Please check if the wikitext is invalid.');
+					return;
+				}
+
 				$page_html = $parser_output->getText();
 
 				$dom = new DOMDocument();
@@ -113,10 +138,17 @@ class DocBookExportAPI extends ApiBase {
 					$this->getResult()->addValue( 'result', 'failed', 'Unable to parse contents for page "' . $wikipage . '" using Pandoc. Please check if page contains invalid tags.');
 					return;
 				}
+
 				foreach( $index_terms as $index_term ) {
 					$index_term = trim($index_term);
 					$pandoc_output = str_replace( $index_term, $index_term . '<indexterm><primary>' . $index_term . '</primary></indexterm>', $pandoc_output );
 				}
+
+				$placeholderId = 0;
+				foreach( $footnotes as $footnote ) {
+					$pandoc_output = str_replace( 'PLACEHOLDER-' . ++$placeholderId, '<footnote>' . $footnote . '</footnote>', $pandoc_output );
+				}
+
 				$book_contents .= $pandoc_output;
 			}
 			if ( $identifier == '*' ){
