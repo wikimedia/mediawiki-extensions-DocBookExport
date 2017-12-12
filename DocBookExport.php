@@ -9,7 +9,7 @@ class DocBookExport {
 	}
 
 	public static function parseDocBookSyntaxParserFunction( &$parser ) {
-		$options = extractOptions( array_slice( func_get_args(), 1 ) );
+		$options = self::extractOptions( array_slice( func_get_args(), 1 ) );
 		return array( self::parseDocBookSyntax( $parser, $options ), 'noparse' => true, 'isHTML' => true );
 	}
 
@@ -18,7 +18,7 @@ class DocBookExport {
 		return self::parseDocBookSyntax( $parser, $args );
 	}
 
-	public static function parseDocBookSyntax( $parser, $options ) {
+	public static function parseDocBookSyntax( &$parser, $options ) {
 		global $wgScriptPath, $wgTitle;
 
         $serialized = serialize( $options );
@@ -29,25 +29,25 @@ class DocBookExport {
 		return '<a href="' . $api_download_link .'">Download Docbook</a>';
 	}
 
-}
+	public static function extractOptions( array $options ) {
+		$results = array();
 
-function extractOptions( array $options ) {
-	$results = array();
+		foreach ( $options as $option ) {
+			$pair = explode( '=', $option, 2 );
+			if ( count( $pair ) === 2 ) {
+				$name = trim( $pair[0] );
+				$value = trim( $pair[1] );
+				$results[$name] = $value;
+			}
 
-	foreach ( $options as $option ) {
-		$pair = explode( '=', $option, 2 );
-		if ( count( $pair ) === 2 ) {
-			$name = trim( $pair[0] );
-			$value = trim( $pair[1] );
-			$results[$name] = $value;
+			if ( count( $pair ) === 1 ) {
+				$name = trim( $pair[0] );
+				$results[$name] = true;
+			}
 		}
-
-		if ( count( $pair ) === 1 ) {
-			$name = trim( $pair[0] );
-			$results[$name] = true;
-		}
+		return $results;
 	}
-	return $results;
+
 }
 
 ?>

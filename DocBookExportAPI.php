@@ -5,7 +5,7 @@
 
 class DocBookExportAPI extends ApiBase {
 
-	static $excludedTags = array('h1', 'h2', 'h3', 'h4', 'h5', 'h6');
+	static $excludedTags = array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' );
 
 	public function __construct( $query, $moduleName ) {
 		parent::__construct( $query, $moduleName );
@@ -24,7 +24,6 @@ class DocBookExportAPI extends ApiBase {
 			__METHOD__
 		);
 		$options = unserialize( $propValue );
-
 		$book_title = '';
 		$book_contents = '<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 		<book>';
@@ -86,19 +85,21 @@ class DocBookExportAPI extends ApiBase {
 			foreach( $wiki_pages as $wikipage ) {
 				$placeholderId = 0;
 				$footnotes = array();
+				$xreflabels = array();
+
 				$titleObj = Title::newFromText( $wikipage );
 				$pageObj = new WikiPage( $titleObj );
 
 				$content = $pageObj->getContent( Revision::RAW );
 				if ( !$content ) {
-					$this->getResult()->addValue( 'result', 'failed', 'Unable to get contents for page "' . $wikipage . '". Please check if the page exists.');
+					$this->getResult()->addValue( 'result', 'failed', 'Unable to get contents for page "' . $wikipage . '". Please check if the page exists.' );
 					return;
 				}
 				$wikitext = $content->getNativeData();
 
 				preg_match_all( '/<ref ?.*>(.*)<\/ref>/', $wikitext, $matches );
 
-				if ( count($matches[1]) > 0 ) {
+				if ( count( $matches[1] ) > 0 ) {
 					$footnotes = $matches[1];
 					$wikitext = preg_replace_callback(
 						'/<ref ?.*>(.*)<\/ref>/',
@@ -119,12 +120,18 @@ class DocBookExportAPI extends ApiBase {
 				$page_html = $parser_output->getText();
 
 				$dom = new DOMDocument();
+				libxml_use_internal_errors(true); // see https://stackoverflow.com/a/6090728/1150075
 				$dom->loadHtml('<html>' . $page_html . '</html>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+				libxml_clear_errors();
 
 				foreach( self::$excludedTags as $tag ) {
-					foreach( $dom->getElementsByTagName($tag) as $node ) {
+					foreach( $dom->getElementsByTagName( $tag ) as $node ) {
 						$node->parentNode->removeChild( $node );
 					}
+				}
+
+				foreach( $dom->getElementsByTagName( 'figure' ) as $node ) {
+					$xreflabels[] = $node->getAttribute( 'xreflabel' );
 				}
 
 				$temp_file = tempnam(sys_get_temp_dir(), 'docbook_html');
@@ -139,6 +146,32 @@ class DocBookExportAPI extends ApiBase {
 					return;
 				}
 
+				$doc = new DOMDocument();
+				$doc->loadXML( '<root xmlns:xlink="http://www.w3.org/1999/xlink">' . $pandoc_output . '</root>', LIBXML_HTML_NOIMPLIED );
+
+				foreach( $doc->getElementsByTagName( 'figure' ) as $node ) {
+					$label = array_shift( $xreflabels );
+					$node->setAttribute( 'xreflabel', $label );
+					$node->setAttribute( 'id', $label );
+					$node->appendChild( $doc->createElement( 'title', $label ) );
+				}
+
+				foreach( $doc->getElementsByTagName( 'link' ) as $node ) {
+					if ( $node->hasAttribute( 'role' ) && $node->getAttribute( 'role' ) == 'xref' ) {
+						$label = str_replace( '_', ' ', explode( '#', $node->getAttribute( 'xlink:href' ) )[1] );
+						$xrefNode = $doc->createElement( 'xref' );
+						$xrefNode->setAttribute( 'linkend', $label );
+						$node->parentNode->replaceChild( $xrefNode , $node );
+					}
+				}
+
+				if ( $doc->getElementsByTagName( 'root' )->length > 0 ) {
+					$pandoc_output = '';
+					foreach ( $doc->getElementsByTagName( 'root' )->item(0)->childNodes as $node ) {
+					   $pandoc_output .= $doc->saveXML( $node );
+					}
+				}
+
 				foreach( $index_terms as $index_term ) {
 					$index_term = trim($index_term);
 					$pandoc_output = str_replace( $index_term, $index_term . '<indexterm><primary>' . $index_term . '</primary></indexterm>', $pandoc_output );
@@ -148,7 +181,6 @@ class DocBookExportAPI extends ApiBase {
 				foreach( $footnotes as $footnote ) {
 					$pandoc_output = str_replace( 'PLACEHOLDER-' . ++$placeholderId, '<footnote>' . $footnote . '</footnote>', $pandoc_output );
 				}
-
 				$book_contents .= $pandoc_output;
 			}
 			if ( $identifier == '*' ){

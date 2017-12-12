@@ -11,6 +11,7 @@ For installation of this extension you need to have ssh access to your server.
 * Add the following line to your LocalSettings.php file: 'wfLoadExtension( 'DocBookExport' );'
 * Verify you have this extension installed by visiting the /Special:Version page on your wiki.
 * Install pandoc - a dependancy for this extension. See https://pandoc.org/installing.html
+* Install extension Figures - It supports defining figures on MediaWiki
 * Configure $wgDocBookExportPandocPath to your Pandoc path in case the "pandoc" command doesn't work
 
 #Usage
