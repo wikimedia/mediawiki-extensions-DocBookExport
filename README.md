@@ -24,6 +24,7 @@ page structure=
 * Buying clothes intro,Buying shoes (title=Buying the right clothes, header=Custom Header)  
 ** How I buy shoes  
 |title=My Guide to Bowling  
+|cover page=Cover Contents  
 |header=My Guide to Bowling  
 |footer=My Guide to Bowling  
 |index term categories=index terms  
