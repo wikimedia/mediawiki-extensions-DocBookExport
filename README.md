@@ -21,19 +21,15 @@ Parser Function Example:
 
 {{#docbook:
 page structure=
-* Buying the right clothes=Buying clothes intro,Buying shoes
+* Buying clothes intro,Buying shoes (title=Buying the right clothes, header=Custom Header)
 ** How I buy shoes
 |title=My Guide to Bowling
+|header=My Guide to Bowling
+|footer=My Guide to Bowling
+|index term categories=index terms
+|index terms=shoe,clothes
 }}
 
-
-Tag Extension Example:
-
-
-<docbook title="My Guide to Bowling">
-* Buying the right clothes=Buying clothes intro,Buying shoes
-** How I buy shoes
-</docbook>
 
 #Credits
 This extension has been written by Nischay Nahata for wikiworks.com and is sponsored by NATO

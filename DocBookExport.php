@@ -26,7 +26,7 @@ class DocBookExport {
 
 		$api_download_link = $wgScriptPath . '/api.php?action=getdocbook&bookname='. $wgTitle->getText();
 
-		return '<a href="' . $api_download_link .'">Download Docbook</a>';
+		return '<a href="' . $api_download_link .'">Generate Docbook</a>';
 	}
 
 	public static function extractOptions( array $options ) {

@@ -187,8 +187,8 @@ class DocBookExportAPI extends ApiBase {
 				$page_html = $parser_output->getText();
 
 				$dom = new DOMDocument();
-				libxml_use_internal_errors(true); // see https://stackoverflow.com/a/6090728/1150075
-				$dom->loadHtml('<html>' . $page_html . '</html>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+				libxml_use_internal_errors(true);
+				$dom->loadHtml('<html>' . $page_html . '</html>');
 				libxml_clear_errors();
 
 				foreach( self::$excludedTags as $tag ) {
@@ -205,7 +205,7 @@ class DocBookExportAPI extends ApiBase {
 				if ( !file_put_contents( $temp_file, $dom->saveHTML() ) ) {
 					$this->getResult()->addValue( 'result', 'failed', 'Unable to create or write to temporary file.' );
 				}
-				$cmd = $wgDocBookExportPandocPath . " ". $temp_file . " -f html -t docbook5 2>&1";
+				$cmd = $wgDocBookExportPandocPath . " ". $temp_file . " -f html -t docbook 2>&1";
 				$pandoc_output = shell_exec( $cmd );
 
 				if ( !$pandoc_output ) {
@@ -214,7 +214,7 @@ class DocBookExportAPI extends ApiBase {
 				}
 
 				$doc = new DOMDocument();
-				$doc->loadXML( '<root xmlns:xlink="http://www.w3.org/1999/xlink">' . $pandoc_output . '</root>', LIBXML_HTML_NOIMPLIED );
+				$doc->loadXML( '<root xmlns:xlink="http://www.w3.org/1999/xlink">' . $pandoc_output . '</root>' );
 
 				foreach( $doc->getElementsByTagName( 'figure' ) as $node ) {
 					$label = array_shift( $xreflabels );
