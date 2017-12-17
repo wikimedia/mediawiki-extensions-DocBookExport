@@ -12,7 +12,7 @@ class DocBookExportAPI extends ApiBase {
 	}
 
 	public function execute() {
-		global $wgDocBookExportPandocPath, $wgScriptPath;
+		global $wgDocBookExportPandocPath, $wgServer;
 
 		$bookName = $this->getMain()->getVal( 'bookname' );
 		$title = Title::newFromText( $bookName );
@@ -29,7 +29,21 @@ class DocBookExportAPI extends ApiBase {
 		<book>';
 
 		$book_contents .= '<title>' . $options['title'] . '</title>';
-		$page_structure = explode( "\n", $options['page structure'] );
+		$folder_name = str_replace( ' ', '_', $options['title'] );
+		rrmdir( __DIR__  . "/$folder_name" );
+		mkdir( __DIR__  . "/$folder_name" );
+		mkdir( __DIR__  . "/$folder_name/images" );
+		$all_files = array();
+
+		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template.xsl' );
+		if ( array_key_exists( 'header', $options ) ) {
+			$xsl_contents = str_replace( 'HEADERPLACEHOLDER', $options['header'], $xsl_contents );
+		}
+		if ( array_key_exists( 'footer', $options ) ) {
+			$xsl_contents = str_replace( 'FOOTERPLACEHOLDER', $options['footer'], $xsl_contents );
+		}
+		file_put_contents( __DIR__ . "/$folder_name/docbookexport.xsl", $xsl_contents );
+		$all_files["docbookexport.xsl"] = __DIR__ . "/$folder_name/docbookexport.xsl";
 
 		$index_terms = array();
 		if ( array_key_exists( 'index terms', $options ) ) {
@@ -55,7 +69,12 @@ class DocBookExportAPI extends ApiBase {
 		$popts->setEditSection( false );
 		$popts->setTidy( true );
 
+		$close_tags = array();
+		$deep_level = 0;
+		$page_structure = explode( "\n", $options['page structure'] );
 		foreach( $page_structure as $current_line ) {
+			$display_pagename = '';
+			$custom_header = '';
 			$parts = explode( ' ', $current_line, 2 );
 			if ( count( $parts ) < 2 ) {
 				continue;
@@ -63,25 +82,73 @@ class DocBookExportAPI extends ApiBase {
 			$identifier = $parts[0];
 			$after_identifier = $parts[1];
 
-			if ( $identifier == '*' ){
+			if ( $identifier == '*' ) {
+				$this_level = $deep_level;
+				while( $this_level >= 0 ) {
+					if ( array_key_exists( $this_level, $close_tags ) ) {
+						$book_contents .= $close_tags[$this_level];
+						$close_tags[$this_level] = '';
+					}
+					$this_level--;
+				}
 				$book_contents .= '<chapter>';
-			} else if ( $identifier == '**' ) {
+				if ( !array_key_exists( 0, $close_tags ) ) {
+					$close_tags[0] = '';
+				}
+				$close_tags[0] .= '</chapter>';
+			} else if ( $identifier[0] == '*' ) {
+				$indent_level = strlen( $identifier ) - 1;
+				$deep_level = max( $deep_level, $indent_level );
+				$this_level = $deep_level;
+				while( $this_level >= $indent_level ) {
+					if ( array_key_exists( $this_level, $close_tags ) ) {
+						$book_contents .= $close_tags[$this_level];
+						$close_tags[$this_level] = '';
+					}
+					$this_level--;
+				}
 				$book_contents .= '<section>';
+				if ( !array_key_exists( $indent_level, $close_tags ) ) {
+					$close_tags[$indent_level] = '';
+				}
+				$close_tags[$indent_level] .= '</section>';
+			} else if ( $identifier == '?' ) {
+				$this_level = $deep_level;
+				while($this_level >= 0) {
+					if (array_key_exists($this_level, $close_tags)) {
+						$book_contents .= $close_tags[$this_level];
+						$close_tags[$this_level] = '';
+					}
+					$this_level--;
+				}
+				$book_contents .= '<appendix>';
+				if ( !array_key_exists( 0, $close_tags ) ) {
+					$close_tags[0] = '';
+				}
+				$close_tags[0] .= '</appendix>';
 			} else {
-				continue;
+				$this->getResult()->addValue( 'result', 'failed', "Unsupported identifier: $identifier used in page structure" );
 			}
 
-			$parts = explode( '=', $after_identifier );
+			$parts = explode( '(', $after_identifier );
 
 			if ( count( $parts ) == 2 ) {
-				$wiki_pages = explode( ',', $parts[1] );
-				$display_pagename = $parts[0];
+				$wiki_pages = explode( ',', $parts[0] );
+				$line_props = explode( ')', $parts[1] )[0];
+				$chunks = array_chunk(preg_split('/(=|,)/', $line_props), 2); // See https://stackoverflow.com/a/32768029/1150075
+				$line_props = array_combine(array_column($chunks, 0), array_column($chunks, 1));
+				if ( array_key_exists( 'title', $line_props ) ) {
+					$display_pagename = $line_props['title'];
+				}
+				if ( array_key_exists( 'header', $line_props ) ) {
+					$custom_header = ' header="' . $line_props['header']. '"';
+				}
 			} else {
 				$wiki_pages = explode( ',', $parts[0] );
 				$display_pagename = $wiki_pages[0];
 			}
 
-			$book_contents .= '<title>'. $display_pagename .'</title>';
+			$book_contents .= "<title$custom_header>$display_pagename</title>";
 			foreach( $wiki_pages as $wikipage ) {
 				$placeholderId = 0;
 				$footnotes = array();
@@ -156,6 +223,15 @@ class DocBookExportAPI extends ApiBase {
 					$node->appendChild( $doc->createElement( 'title', $label ) );
 				}
 
+				foreach( $doc->getElementsByTagName( 'imagedata' ) as $node ) {
+					$file_url = $node->getAttribute( 'fileref' );
+					$filename = basename( $file_url );
+					$file_url = Title::newFromText( 'Special:Redirect' )->getFullURL() . "/file/$filename";
+					file_put_contents( __DIR__ . "/$folder_name/images/$filename", file_get_contents( $file_url ) );
+					$node->setAttribute( 'fileref', "images/$filename" );
+					$all_files["images/$filename"] = __DIR__ . "/$folder_name/images/$filename";
+				}
+
 				foreach( $doc->getElementsByTagName( 'link' ) as $node ) {
 					if ( $node->hasAttribute( 'role' ) && $node->getAttribute( 'role' ) == 'xref' ) {
 						$label = str_replace( '_', ' ', explode( '#', $node->getAttribute( 'xlink:href' ) )[1] );
@@ -179,30 +255,64 @@ class DocBookExportAPI extends ApiBase {
 
 				$placeholderId = 0;
 				foreach( $footnotes as $footnote ) {
-					$pandoc_output = str_replace( 'PLACEHOLDER-' . ++$placeholderId, '<footnote>' . $footnote . '</footnote>', $pandoc_output );
+					$pandoc_output = str_replace( 'PLACEHOLDER-' . ++$placeholderId, '<footnote><para>' . $footnote . '</para></footnote>', $pandoc_output );
 				}
 				$book_contents .= $pandoc_output;
 			}
-			if ( $identifier == '*' ){
-				$book_contents .= '</chapter>';
-			} else if ( $identifier == '**' ) {
-				$book_contents .= '</section>';
-			}
 		}
-		$book_contents .= '</book>';
+		$this_level = $deep_level;
+		while($this_level >= 0) {
+			if (array_key_exists($this_level, $close_tags)) {
+				$book_contents .= $close_tags[$this_level];
+				$close_tags[$this_level] = '';
+			}
+			$this_level--;
+		}
+		$book_contents .= '<index/></book>';
 
-		header( 'Content-type: text/xml' );
-		header( 'Content-Disposition: attachment; filename="'. $options['title'] .'.xml"' );
+		file_put_contents( __DIR__ . "/$folder_name/" . $options['title'] .'.xml', $book_contents );
+		$all_files[$options['title'] .'.xml'] = __DIR__ . "/$folder_name/" . $options['title'] .'.xml';
 
-		// do not cache the file
-		header( 'Pragma: no-cache' );
-		header( 'Expires: 0' );
+		$zip = new ZipArchive();
+		$zip_name = $folder_name .".zip";
+		$zip_path = __DIR__ . "/". $zip_name;
 
-		// create a file pointer connected to the output stream
-		$file = fopen( 'php://output', 'w' );
-
-		fwrite( $file, $book_contents );
-		fclose( $file );
-		exit();
+		if(file_exists($zip_path)){
+			unlink($zip_path);
+		}
+		if ($zip->open($zip_path, ZipArchive::CREATE)!==TRUE) {
+			exit("cannot open <$zip_path>\n");
+		}
+		foreach($all_files as $filename => $path) {
+			$zip->addFromString($filename, file_get_contents($path));
+		}
+		$filesize = filesize( $zip_path );
+		if ( $filesize ) {
+			ob_clean();
+			ob_end_flush();
+			header('Content-Disposition: attachment; filename="'. $zip_name . '"');
+			header('Content-Type: application/zip');
+			header('Content-Length: ' .  $filesize );
+			header('Connection: close');
+			readfile( $zip_path );
+		} else {
+			$zip_path = $wgServer . "/extensions/DocBookExport/$zip_name";
+			$this->getResult()->addValue( 'result', 'success', 'Unable to start auto download. Download using this link: ' . $zip_path );
+		}
 	}
+}
+
+function rrmdir($dir) { 
+   if (is_dir($dir)) { 
+     $objects = scandir($dir); 
+     foreach ($objects as $object) { 
+       if ($object != "." && $object != "..") { 
+         if (is_dir($dir."/".$object))
+           rrmdir($dir."/".$object);
+         else
+           unlink($dir."/".$object); 
+       } 
+     }
+     rmdir($dir);
+   } 
 }
