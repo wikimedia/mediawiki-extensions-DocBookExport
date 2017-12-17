@@ -19,16 +19,16 @@ To create a book define the page structure using the docbook parser function or 
 
 Parser Function Example:
 
-{{#docbook:
-page structure=
-* Buying clothes intro,Buying shoes (title=Buying the right clothes, header=Custom Header)
-** How I buy shoes
-|title=My Guide to Bowling
-|header=My Guide to Bowling
-|footer=My Guide to Bowling
-|index term categories=index terms
-|index terms=shoe,clothes
-}}
+{{#docbook:  
+page structure=  
+* Buying clothes intro,Buying shoes (title=Buying the right clothes, header=Custom Header)  
+** How I buy shoes  
+|title=My Guide to Bowling  
+|header=My Guide to Bowling  
+|footer=My Guide to Bowling  
+|index term categories=index terms  
+|index terms=shoe,clothes  
+}}  
 
 
 #Credits
