@@ -35,6 +35,7 @@ class DocBookExportAPI extends ApiBase {
 		$book_contents = '<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 		<book>';
 
+		$all_files = array();
 		$folder_name = str_replace( ' ', '_', $options['title'] );
 		$index_terms = array();
 		if ( array_key_exists( 'index terms', $options ) ) {
@@ -54,7 +55,7 @@ class DocBookExportAPI extends ApiBase {
 		}
 
 		if ( array_key_exists( 'cover page', $options ) ) {
-			$book_contents .= '<info><cover>' . $this->getDocbookfromWikiPage( $options['cover page'], $popts, $folder_name, $index_terms ) . '</cover></info>';
+			$book_contents .= '<info><cover>' . $this->getDocbookfromWikiPage( $options['cover page'], $popts, $folder_name, $index_terms, $all_files ) . '</cover></info>';
 		}
 
 		$book_contents .= '<title>' . $options['title'] . '</title>';
@@ -62,7 +63,6 @@ class DocBookExportAPI extends ApiBase {
 		rrmdir( __DIR__  . "/$folder_name" );
 		mkdir( __DIR__  . "/$folder_name" );
 		mkdir( __DIR__  . "/$folder_name/images" );
-		$all_files = array();
 
 		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template.xsl' );
 		if ( array_key_exists( 'header', $options ) ) {
@@ -156,7 +156,7 @@ class DocBookExportAPI extends ApiBase {
 
 			$book_contents .= "<title$custom_header>$display_pagename</title>";
 			foreach( $wiki_pages as $wikipage ) {
-				$book_contents .= $this->getDocbookfromWikiPage( $wikipage, $popts, $folder_name, $index_terms );
+				$book_contents .= $this->getDocbookfromWikiPage( $wikipage, $popts, $folder_name, $index_terms, $all_files );
 			}
 		}
 		$this_level = $deep_level;
@@ -200,7 +200,7 @@ class DocBookExportAPI extends ApiBase {
 		}
 	}
 
-	public function getDocbookfromWikiPage( $wikipage, $popts, $folder_name, $index_terms ) {
+	public function getDocbookfromWikiPage( $wikipage, $popts, $folder_name, $index_terms, &$all_files ) {
 		global $wgDocBookExportPandocPath;
 		$placeholderId = 0;
 		$footnotes = array();
