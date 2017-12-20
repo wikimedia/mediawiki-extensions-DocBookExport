@@ -24,9 +24,13 @@ class DocBookExport {
         $serialized = serialize( $options );
         $parser->getOutput()->setProperty( 'docbook', $serialized );
 
-		$api_download_link = $wgScriptPath . '/api.php?action=getdocbook&bookname='. $wgTitle->getText();
+		$api_download_link = $wgScriptPath . '/api.php?action=getdocbook&outputformat=docbook&bookname='. $wgTitle->getText();
+		$api_download_pdf_link = $wgScriptPath . '/api.php?action=getdocbook&outputformat=pdf&bookname='. $wgTitle->getText();
 
-		return '<a href="' . $api_download_link .'">Generate Docbook</a>';
+		return '<a href="' . $api_download_link .'">Generate Docbook</a>
+			<br/>
+			<a href="' . $api_download_pdf_link .'">Generate PDF</a>
+			';
 	}
 
 	public static function extractOptions( array $options ) {

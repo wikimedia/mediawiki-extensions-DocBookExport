@@ -11,8 +11,12 @@ For installation of this extension you need to have ssh access to your server.
 * Add the following line to your LocalSettings.php file: 'wfLoadExtension( 'DocBookExport' );'
 * Verify you have this extension installed by visiting the /Special:Version page on your wiki.
 * Install pandoc - a dependancy for this extension. See https://pandoc.org/installing.html
-* Install extension Figures - It supports defining figures on MediaWiki
 * Configure $wgDocBookExportPandocPath to your Pandoc path in case the "pandoc" command doesn't work
+* Install extension Figures - It supports defining figures on MediaWiki
+* To download DocBook files in Zip format install the ZipArchive php extension.
+	* See https://stackoverflow.com/q/3872555/1150075
+* To download DocBook in PDF format install the xsltproc and fop
+	* See https://askubuntu.com/a/462343 and https://www.howtoinstall.co/en/ubuntu/trusty/fop
 
 #Usage
 To create a book define the page structure using the docbook parser function or tag extension. See examples below.

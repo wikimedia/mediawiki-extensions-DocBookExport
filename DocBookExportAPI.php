@@ -12,7 +12,7 @@ class DocBookExportAPI extends ApiBase {
 	}
 
 	public function execute() {
-		global $wgServer;
+		global $wgServer, $wgScriptPath;
 
 		$popts = new ParserOptions();
 		$popts->enableLimitReport( false );
@@ -36,7 +36,7 @@ class DocBookExportAPI extends ApiBase {
 		<book>';
 
 		$all_files = array();
-		$folder_name = str_replace( ' ', '_', $options['title'] );
+		$docbook_folder = str_replace( ' ', '_', $options['title'] );
 		$index_terms = array();
 		if ( array_key_exists( 'index terms', $options ) ) {
 			$index_terms = explode( ",", $options['index terms'] );
@@ -55,14 +55,14 @@ class DocBookExportAPI extends ApiBase {
 		}
 
 		if ( array_key_exists( 'cover page', $options ) ) {
-			$book_contents .= '<info><cover>' . $this->getDocbookfromWikiPage( $options['cover page'], $popts, $folder_name, $index_terms, $all_files ) . '</cover></info>';
+			$book_contents .= '<info><cover>' . $this->getDocbookfromWikiPage( $options['cover page'], $popts, $docbook_folder, $index_terms, $all_files ) . '</cover></info>';
 		}
 
 		$book_contents .= '<title>' . $options['title'] . '</title>';
 
-		rrmdir( __DIR__  . "/$folder_name" );
-		mkdir( __DIR__  . "/$folder_name" );
-		mkdir( __DIR__  . "/$folder_name/images" );
+		rrmdir( __DIR__  . "/$docbook_folder" );
+		mkdir( __DIR__  . "/$docbook_folder" );
+		mkdir( __DIR__  . "/$docbook_folder/images" );
 
 		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template.xsl' );
 		if ( array_key_exists( 'header', $options ) ) {
@@ -72,8 +72,8 @@ class DocBookExportAPI extends ApiBase {
 			$xsl_contents = str_replace( 'FOOTERPLACEHOLDER', $options['footer'], $xsl_contents );
 		}
 
-		file_put_contents( __DIR__ . "/$folder_name/docbookexport.xsl", $xsl_contents );
-		$all_files["docbookexport.xsl"] = __DIR__ . "/$folder_name/docbookexport.xsl";
+		file_put_contents( __DIR__ . "/$docbook_folder/docbookexport.xsl", $xsl_contents );
+		$all_files["docbookexport.xsl"] = __DIR__ . "/$docbook_folder/docbookexport.xsl";
 
 		$close_tags = array();
 		$deep_level = 0;
@@ -156,7 +156,7 @@ class DocBookExportAPI extends ApiBase {
 
 			$book_contents .= "<title$custom_header>$display_pagename</title>";
 			foreach( $wiki_pages as $wikipage ) {
-				$book_contents .= $this->getDocbookfromWikiPage( $wikipage, $popts, $folder_name, $index_terms, $all_files );
+				$book_contents .= $this->getDocbookfromWikiPage( $wikipage, $popts, $docbook_folder, $index_terms, $all_files );
 			}
 		}
 		$this_level = $deep_level;
@@ -169,38 +169,60 @@ class DocBookExportAPI extends ApiBase {
 		}
 		$book_contents .= '<index/></book>';
 
-		file_put_contents( __DIR__ . "/$folder_name/" . $options['title'] .'.xml', $book_contents );
-		$all_files[$options['title'] .'.xml'] = __DIR__ . "/$folder_name/" . $options['title'] .'.xml';
+		file_put_contents( __DIR__ . "/$docbook_folder/$docbook_folder.xml", $book_contents );
+		$all_files[$options['title'] .'.xml'] = __DIR__ . "/$docbook_folder/" . $options['title'] .'.xml';
 
-		$zip = new ZipArchive();
-		$zip_name = $folder_name .".zip";
-		$zip_path = __DIR__ . "/". $zip_name;
+		$outputformat = $this->getMain()->getVal( 'outputformat' );
 
-		if(file_exists($zip_path)){
-			unlink($zip_path);
+		$output_filename = '';
+		$output_filepath = '';
+		$filesize = 0;
+		$content_type = '';
+		if ( $outputformat == 'docbook' ) {
+			$output_filename = $docbook_folder .".zip";
+			$output_filepath = __DIR__ . "/". $output_filename;
+			$zip = new ZipArchive();
+
+			if(file_exists($output_filepath)){
+				unlink($output_filepath);
+			}
+			if ($zip->open($output_filepath, ZipArchive::CREATE)!==TRUE) {
+				exit("cannot open <$output_filepath>\n");
+			}
+			foreach($all_files as $filename => $path) {
+				$zip->addFromString($filename, file_get_contents($path));
+			}
+			$filesize = filesize( $output_filepath );
+			$content_type = 'application/zip';
+		} else if ( $outputformat == 'pdf' ) {
+			$output_filename = $docbook_folder .".pdf";
+			$output_filepath = __DIR__ . "/". $output_filename;
+
+			shell_exec( "xsltproc --output " . __DIR__ . "/$docbook_folder/$docbook_folder.fo " . __DIR__ . "/$docbook_folder/docbookexport.xsl " . __DIR__ . "/$docbook_folder/$docbook_folder.xml" );
+
+			shell_exec( "fop -fo " . __DIR__ . "/$docbook_folder/$docbook_folder.fo -pdf $output_filepath" );
+
+			$filesize = filesize( $output_filepath );
+			$content_type = 'application/pdf';
+		} else {
+			$this->getResult()->addValue( 'result', 'failed', 'Invalid output format or not specified');
 		}
-		if ($zip->open($zip_path, ZipArchive::CREATE)!==TRUE) {
-			exit("cannot open <$zip_path>\n");
-		}
-		foreach($all_files as $filename => $path) {
-			$zip->addFromString($filename, file_get_contents($path));
-		}
-		$filesize = filesize( $zip_path );
+
 		if ( $filesize ) {
 			ob_clean();
 			ob_end_flush();
-			header('Content-Disposition: attachment; filename="'. $zip_name . '"');
-			header('Content-Type: application/zip');
+			header('Content-Disposition: attachment; filename="'. $output_filename . '"');
+			header('Content-Type: ' . $content_type);
 			header('Content-Length: ' .  $filesize );
 			header('Connection: close');
-			readfile( $zip_path );
+			readfile( $output_filepath );
 		} else {
-			$zip_path = $wgServer . "/extensions/DocBookExport/$zip_name";
-			$this->getResult()->addValue( 'result', 'success', 'Unable to start auto download. Download using this link: ' . $zip_path );
+			$output_filepath = $wgServer . $wgScriptPath . "/extensions/DocBookExport/$output_filename";
+			$this->getResult()->addValue( 'result', 'success', 'Unable to start auto download. Download using this link: ' . $output_filepath );
 		}
 	}
 
-	public function getDocbookfromWikiPage( $wikipage, $popts, $folder_name, $index_terms, &$all_files ) {
+	public function getDocbookfromWikiPage( $wikipage, $popts, $docbook_folder, $index_terms, &$all_files ) {
 		global $wgDocBookExportPandocPath;
 		$placeholderId = 0;
 		$footnotes = array();
@@ -276,9 +298,9 @@ class DocBookExportAPI extends ApiBase {
 			$file_url = $node->getAttribute( 'fileref' );
 			$filename = basename( $file_url );
 			$file_url = Title::newFromText( 'Special:Redirect' )->getFullURL() . "/file/$filename";
-			file_put_contents( __DIR__ . "/$folder_name/images/$filename", file_get_contents( $file_url ) );
+			file_put_contents( __DIR__ . "/$docbook_folder/images/$filename", file_get_contents( $file_url ) );
 			$node->setAttribute( 'fileref', "images/$filename" );
-			$all_files["images/$filename"] = __DIR__ . "/$folder_name/images/$filename";
+			$all_files["images/$filename"] = __DIR__ . "/$docbook_folder/images/$filename";
 		}
 
 		foreach( $doc->getElementsByTagName( 'link' ) as $node ) {
