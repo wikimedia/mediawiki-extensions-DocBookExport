@@ -60,9 +60,9 @@ class DocBookExportAPI extends ApiBase {
 
 		$book_contents .= '<title>' . $options['title'] . '</title>';
 
-		rrmdir( __DIR__  . "/$docbook_folder" );
-		mkdir( __DIR__  . "/$docbook_folder" );
-		mkdir( __DIR__  . "/$docbook_folder/images" );
+		rrmdir( __DIR__  . "/generated_files/$docbook_folder" );
+		mkdir( __DIR__  . "/generated_files/$docbook_folder" );
+		mkdir( __DIR__  . "/generated_files/$docbook_folder/images" );
 
 		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template.xsl' );
 		if ( array_key_exists( 'header', $options ) ) {
@@ -72,8 +72,8 @@ class DocBookExportAPI extends ApiBase {
 			$xsl_contents = str_replace( 'FOOTERPLACEHOLDER', $options['footer'], $xsl_contents );
 		}
 
-		file_put_contents( __DIR__ . "/$docbook_folder/docbookexport.xsl", $xsl_contents );
-		$all_files["docbookexport.xsl"] = __DIR__ . "/$docbook_folder/docbookexport.xsl";
+		file_put_contents( __DIR__ . "/generated_files/$docbook_folder/docbookexport.xsl", $xsl_contents );
+		$all_files["docbookexport.xsl"] = __DIR__ . "/generated_files/$docbook_folder/docbookexport.xsl";
 
 		$close_tags = array();
 		$deep_level = 0;
@@ -169,8 +169,8 @@ class DocBookExportAPI extends ApiBase {
 		}
 		$book_contents .= '<index/></book>';
 
-		file_put_contents( __DIR__ . "/$docbook_folder/$docbook_folder.xml", $book_contents );
-		$all_files[$options['title'] .'.xml'] = __DIR__ . "/$docbook_folder/" . $options['title'] .'.xml';
+		file_put_contents( __DIR__ . "/generated_files/$docbook_folder/$docbook_folder.xml", $book_contents );
+		$all_files[$options['title'] .'.xml'] = __DIR__ . "/generated_files/$docbook_folder/$docbook_folder.xml";
 
 		$outputformat = $this->getMain()->getVal( 'outputformat' );
 
@@ -180,7 +180,7 @@ class DocBookExportAPI extends ApiBase {
 		$content_type = '';
 		if ( $outputformat == 'docbook' ) {
 			$output_filename = $docbook_folder .".zip";
-			$output_filepath = __DIR__ . "/". $output_filename;
+			$output_filepath = __DIR__ . "/generated_files/". $output_filename;
 			$zip = new ZipArchive();
 
 			if(file_exists($output_filepath)){
@@ -196,11 +196,11 @@ class DocBookExportAPI extends ApiBase {
 			$content_type = 'application/zip';
 		} else if ( $outputformat == 'pdf' ) {
 			$output_filename = $docbook_folder .".pdf";
-			$output_filepath = __DIR__ . "/". $output_filename;
+			$output_filepath = __DIR__ . "/generated_files/". $output_filename;
 
-			shell_exec( "xsltproc --output " . __DIR__ . "/$docbook_folder/$docbook_folder.fo " . __DIR__ . "/$docbook_folder/docbookexport.xsl " . __DIR__ . "/$docbook_folder/$docbook_folder.xml" );
+			shell_exec( "xsltproc --output " . __DIR__ . "/generated_files/$docbook_folder/$docbook_folder.fo " . __DIR__ . "/generated_files/$docbook_folder/docbookexport.xsl " . __DIR__ . "/generated_files/$docbook_folder/$docbook_folder.xml" );
 
-			shell_exec( "fop -fo " . __DIR__ . "/$docbook_folder/$docbook_folder.fo -pdf $output_filepath" );
+			shell_exec( "fop -fo " . __DIR__ . "/generated_files/$docbook_folder/$docbook_folder.fo -pdf $output_filepath" );
 
 			$filesize = filesize( $output_filepath );
 			$content_type = 'application/pdf';
@@ -298,9 +298,9 @@ class DocBookExportAPI extends ApiBase {
 			$file_url = $node->getAttribute( 'fileref' );
 			$filename = basename( $file_url );
 			$file_url = Title::newFromText( 'Special:Redirect' )->getFullURL() . "/file/$filename";
-			file_put_contents( __DIR__ . "/$docbook_folder/images/$filename", file_get_contents( $file_url ) );
+			file_put_contents( __DIR__ . "/generated_files/$docbook_folder/images/$filename", file_get_contents( $file_url ) );
 			$node->setAttribute( 'fileref', "images/$filename" );
-			$all_files["images/$filename"] = __DIR__ . "/$docbook_folder/images/$filename";
+			$all_files["images/$filename"] = __DIR__ . "/generated_files/$docbook_folder/images/$filename";
 		}
 
 		foreach( $doc->getElementsByTagName( 'link' ) as $node ) {

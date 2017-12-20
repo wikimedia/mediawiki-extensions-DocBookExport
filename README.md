@@ -17,6 +17,9 @@ For installation of this extension you need to have ssh access to your server.
 	* See https://stackoverflow.com/q/3872555/1150075
 * To download DocBook in PDF format install the xsltproc and fop
 	* See https://askubuntu.com/a/462343 and https://www.howtoinstall.co/en/ubuntu/trusty/fop
+* Make the "generated_files" folder writable by the server.
+	* In Ubuntu "sudo chown www-data:www-data generated_files" should usually work.
+
 
 #Usage
 To create a book define the page structure using the docbook parser function or tag extension. See examples below.
