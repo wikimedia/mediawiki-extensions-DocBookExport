@@ -54,6 +54,16 @@ class DocBookExportAPI extends ApiBase {
 			}
 		}
 
+		$index_terms_capitalized = array();
+		foreach( $index_terms as $index_term ) {
+			if ( ucfirst( $index_term ) != $index_term ) {
+				$index_terms_capitalized[] = ucfirst( $index_term );
+			} else {
+				$index_terms_capitalized[] = lcfirst( $index_term );
+			}
+		}
+		$index_terms = array_merge( $index_terms, $index_terms_capitalized );
+
 		if ( array_key_exists( 'cover page', $options ) ) {
 			$book_contents .= '<info><cover>' . $this->getDocbookfromWikiPage( $options['cover page'], $popts, $docbook_folder, $index_terms, $all_files ) . '</cover></info>';
 		}
@@ -78,6 +88,7 @@ class DocBookExportAPI extends ApiBase {
 		$close_tags = array();
 		$deep_level = 0;
 		$page_structure = explode( "\n", $options['page structure'] );
+		$content_started = false;
 		foreach( $page_structure as $current_line ) {
 			$display_pagename = '';
 			$custom_header = '';
@@ -89,6 +100,7 @@ class DocBookExportAPI extends ApiBase {
 			$after_identifier = $parts[1];
 
 			if ( $identifier == '*' ) {
+			$content_started = true;
 				$this_level = $deep_level;
 				while( $this_level >= 0 ) {
 					if ( array_key_exists( $this_level, $close_tags ) ) {
@@ -127,11 +139,19 @@ class DocBookExportAPI extends ApiBase {
 					}
 					$this_level--;
 				}
-				$book_contents .= '<appendix>';
+				if ( !$content_started ) {
+					$book_contents .= '<preface>';
+				} else {
+					$book_contents .= '<appendix>';
+				}
 				if ( !array_key_exists( 0, $close_tags ) ) {
 					$close_tags[0] = '';
 				}
-				$close_tags[0] .= '</appendix>';
+				if ( !$content_started ) {
+					$close_tags[0] .= '</preface>';
+				} else {
+					$close_tags[0] .= '</appendix>';
+				}
 			} else {
 				$this->getResult()->addValue( 'result', 'failed', "Unsupported identifier: $identifier used in page structure" );
 			}
