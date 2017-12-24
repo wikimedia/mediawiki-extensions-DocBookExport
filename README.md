@@ -9,6 +9,8 @@ For installation of this extension you need to have ssh access to your server.
 * To install the extension, place the entire 'DocBookExport' directory within your MediaWiki 'extensions' directory
 * Just enter the following command in the 'extensions' directory: 'git clone https://bitbucket.org/wikiworksdev/docbookexport.git DocBookExport'
 * Add the following line to your LocalSettings.php file: 'wfLoadExtension( 'DocBookExport' );'
+* Make the "generated_files" folder writable by the server.
+	* In Ubuntu "sudo chown www-data:www-data generated_files" should usually work.
 * Verify you have this extension installed by visiting the /Special:Version page on your wiki.
 
 #Install Dependencies
@@ -24,8 +26,6 @@ For installation of this extension you need to have ssh access to your server.
 	* See https://stackoverflow.com/q/3872555/1150075
 * To download DocBook in PDF format install the xsltproc and fop
 	* See https://askubuntu.com/a/462343 and https://www.howtoinstall.co/en/ubuntu/trusty/fop
-* Make the "generated_files" folder writable by the server.
-	* In Ubuntu "sudo chown www-data:www-data generated_files" should usually work.
 
 
 #Usage
