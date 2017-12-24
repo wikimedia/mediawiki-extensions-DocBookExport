@@ -297,8 +297,8 @@ class DocBookExportAPI extends ApiBase {
 		foreach( $doc->getElementsByTagName( 'imagedata' ) as $node ) {
 			$file_url = $node->getAttribute( 'fileref' );
 			$filename = basename( $file_url );
-			$file_url = Title::newFromText( 'Special:Redirect' )->getFullURL() . "/file/$filename";
-			file_put_contents( __DIR__ . "/generated_files/$docbook_folder/images/$filename", file_get_contents( $file_url ) );
+			$file_path = wfFindFile( $filename )->getLocalRefPath();
+			file_put_contents( __DIR__ . "/generated_files/$docbook_folder/images/$filename", file_get_contents( $file_path ) );
 			$node->setAttribute( 'fileref', "images/$filename" );
 			$all_files["images/$filename"] = __DIR__ . "/generated_files/$docbook_folder/images/$filename";
 		}
