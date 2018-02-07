@@ -212,6 +212,7 @@ class DocBookExportAPI extends ApiBase {
 			foreach($all_files as $filename => $path) {
 				$zip->addFromString($filename, file_get_contents($path));
 			}
+			$zip->close();
 			$filesize = filesize( $output_filepath );
 			$content_type = 'application/zip';
 		} else if ( $outputformat == 'pdf' ) {
@@ -237,7 +238,6 @@ class DocBookExportAPI extends ApiBase {
 			header('Connection: close');
 			readfile( $output_filepath );
 		} else {
-			$output_filepath = $wgServer . $wgScriptPath . "/extensions/DocBookExport/$output_filename";
 			$this->getResult()->addValue( 'result', 'success', 'Unable to start auto download. Download using this link: ' . $output_filepath );
 		}
 	}
