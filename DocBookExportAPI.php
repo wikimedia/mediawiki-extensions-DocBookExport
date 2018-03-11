@@ -329,6 +329,15 @@ class DocBookExportAPI extends ApiBase {
 				$xrefNode = $doc->createElement( 'xref' );
 				$xrefNode->setAttribute( 'linkend', $label );
 				$node->parentNode->replaceChild( $xrefNode , $node );
+			} else if ( $node->hasAttributeNS( 'http://www.w3.org/1999/xlink', 'href' ) ) {
+				$href = $node->getAttributeNS( 'http://www.w3.org/1999/xlink', 'href' );
+				$page_name = basename( $href );
+				if ( Title::newFromText( $page_name )->exists() ) {
+					$linkNode = $doc->createElement( 'link' );
+					$linkNode->setAttribute( 'linkend', "page-" . $page_name );
+					$linkNode->nodeValue = $node->nodeValue;
+					$node->parentNode->replaceChild( $linkNode , $node );
+				}
 			}
 		}
 
@@ -348,7 +357,7 @@ class DocBookExportAPI extends ApiBase {
 		foreach( $footnotes as $footnote ) {
 			$pandoc_output = str_replace( 'PLACEHOLDER-' . ++$placeholderId, '<footnote><para>' . $footnote . '</para></footnote>', $pandoc_output );
 		}
-		return $pandoc_output;
+		return '<anchor id="page-'. str_replace( ' ', '_', $wikipage ) .'" />' . $pandoc_output;
 	}
 }
 
