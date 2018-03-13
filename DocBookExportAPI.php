@@ -341,6 +341,19 @@ class DocBookExportAPI extends ApiBase {
 			}
 		}
 
+		foreach( $doc->getElementsByTagName( 'para' ) as $node ) {
+			if ( $node->hasChildNodes() ) {
+				foreach($node->childNodes as $node) {
+					if ($node->nodeName == '#text') {
+						foreach( $index_terms as $index_term ) {
+							$index_term = trim($index_term);
+							$node->nodeValue = str_replace( $index_term , "INDEXPLACEHOLDERBEGIN" . $index_term . "INDEXPLACEHOLDEREND" . $index_term , $node->nodeValue );
+						}
+					}
+				}
+			}
+		}
+
 		if ( $doc->getElementsByTagName( 'root' )->length > 0 ) {
 			$pandoc_output = '';
 			foreach ( $doc->getElementsByTagName( 'root' )->item(0)->childNodes as $node ) {
@@ -348,10 +361,8 @@ class DocBookExportAPI extends ApiBase {
 			}
 		}
 
-		foreach( $index_terms as $index_term ) {
-			$index_term = trim($index_term);
-			$pandoc_output = str_replace( $index_term, $index_term . '<indexterm><primary>' . $index_term . '</primary></indexterm>', $pandoc_output );
-		}
+		$pandoc_output = str_replace( "INDEXPLACEHOLDERBEGIN", "<indexterm><primary>", $pandoc_output );
+		$pandoc_output = str_replace( "INDEXPLACEHOLDEREND", "</primary></indexterm>", $pandoc_output );
 
 		$placeholderId = 0;
 		foreach( $footnotes as $footnote ) {
