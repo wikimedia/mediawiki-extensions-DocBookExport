@@ -1,4 +1,7 @@
 <?php
+
+use MediaWiki\MediaWikiServices;
+
 /**
  * @author Nischayn22
  */
@@ -70,11 +73,14 @@ class DocBookExportAPI extends ApiBase {
 
 		$book_contents .= '<title>' . $options['title'] . '</title>';
 
-		rrmdir( __DIR__  . "/generated_files/$docbook_folder" );
-		mkdir( __DIR__  . "/generated_files/$docbook_folder" );
-		mkdir( __DIR__  . "/generated_files/$docbook_folder/images" );
+		$uploadDir = $this->getUploadDir();
+		rrmdir( "$uploadDir/$docbook_folder" );
+		mkdir( "$uploadDir/$docbook_folder" );
+		mkdir( "$uploadDir/$docbook_folder/images" );
 
 		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template.xsl' );
+		$docbookXslPath = realpath( __DIR__ .'/docbook-xsl-1.79.1/fo/docbook.xsl' );
+		$xsl_contents = str_replace( 'DOCBOOKXSLPLACEHOLDER', $docbookXslPath, $xsl_contents );
 		if ( array_key_exists( 'header', $options ) ) {
 			$xsl_contents = str_replace( 'HEADERPLACEHOLDER', $options['header'], $xsl_contents );
 		}
@@ -82,8 +88,8 @@ class DocBookExportAPI extends ApiBase {
 			$xsl_contents = str_replace( 'FOOTERPLACEHOLDER', $options['footer'], $xsl_contents );
 		}
 
-		file_put_contents( __DIR__ . "/generated_files/$docbook_folder/docbookexport.xsl", $xsl_contents );
-		$all_files["docbookexport.xsl"] = __DIR__ . "/generated_files/$docbook_folder/docbookexport.xsl";
+		file_put_contents( "$uploadDir/$docbook_folder/docbookexport.xsl", $xsl_contents );
+		$all_files["docbookexport.xsl"] = "$uploadDir/$docbook_folder/docbookexport.xsl";
 
 		$close_tags = array();
 		$deep_level = 0;
@@ -189,8 +195,8 @@ class DocBookExportAPI extends ApiBase {
 		}
 		$book_contents .= '<index/></book>';
 
-		file_put_contents( __DIR__ . "/generated_files/$docbook_folder/$docbook_folder.xml", $book_contents );
-		$all_files[$options['title'] .'.xml'] = __DIR__ . "/generated_files/$docbook_folder/$docbook_folder.xml";
+		file_put_contents( "$uploadDir/$docbook_folder/$docbook_folder.xml", $book_contents );
+		$all_files[$options['title'] .'.xml'] = "$uploadDir/$docbook_folder/$docbook_folder.xml";
 
 		$outputformat = $this->getMain()->getVal( 'outputformat' );
 
@@ -200,7 +206,7 @@ class DocBookExportAPI extends ApiBase {
 		$content_type = '';
 		if ( $outputformat == 'docbook' ) {
 			$output_filename = $docbook_folder .".zip";
-			$output_filepath = __DIR__ . "/generated_files/". $output_filename;
+			$output_filepath = "$uploadDir/". $output_filename;
 			$zip = new ZipArchive();
 
 			if(file_exists($output_filepath)){
@@ -217,11 +223,11 @@ class DocBookExportAPI extends ApiBase {
 			$content_type = 'application/zip';
 		} else if ( $outputformat == 'pdf' ) {
 			$output_filename = $docbook_folder .".pdf";
-			$output_filepath = __DIR__ . "/generated_files/". $output_filename;
+			$output_filepath = "$uploadDir/". $output_filename;
 
-			shell_exec( "xsltproc --output " . __DIR__ . "/generated_files/$docbook_folder/$docbook_folder.fo " . __DIR__ . "/generated_files/$docbook_folder/docbookexport.xsl " . __DIR__ . "/generated_files/$docbook_folder/$docbook_folder.xml" );
+			shell_exec( "xsltproc --output $uploadDir/$docbook_folder/$docbook_folder.fo $uploadDir/$docbook_folder/docbookexport.xsl $uploadDir/$docbook_folder/$docbook_folder.xml" );
 
-			shell_exec( "fop -fo " . __DIR__ . "/generated_files/$docbook_folder/$docbook_folder.fo -pdf $output_filepath" );
+			shell_exec( "fop -fo " . "$uploadDir/$docbook_folder/$docbook_folder.fo -pdf $output_filepath" );
 
 			$filesize = filesize( $output_filepath );
 			$content_type = 'application/pdf';
@@ -318,9 +324,10 @@ class DocBookExportAPI extends ApiBase {
 			$file_url = $node->getAttribute( 'fileref' );
 			$filename = basename( $file_url );
 			$file_path = wfFindFile( $filename )->getLocalRefPath();
-			file_put_contents( __DIR__ . "/generated_files/$docbook_folder/images/$filename", file_get_contents( $file_path ) );
+			$uploadDir = $this->getUploadDir();
+			file_put_contents( "$uploadDir/$docbook_folder/images/$filename", file_get_contents( $file_path ) );
 			$node->setAttribute( 'fileref', "images/$filename" );
-			$all_files["images/$filename"] = __DIR__ . "/generated_files/$docbook_folder/images/$filename";
+			$all_files["images/$filename"] = "$uploadDir/$docbook_folder/images/$filename";
 		}
 
 		foreach( $doc->getElementsByTagName( 'link' ) as $node ) {
@@ -369,6 +376,25 @@ class DocBookExportAPI extends ApiBase {
 			$pandoc_output = str_replace( 'PLACEHOLDER-' . ++$placeholderId, '<footnote><para>' . $footnote . '</para></footnote>', $pandoc_output );
 		}
 		return '<anchor id="page-'. str_replace( ' ', '_', $wikipage ) .'" />' . $pandoc_output;
+	}
+
+	/**
+	 * Get DocBookExport's custom upload directory (within $wgUploadDirectory).
+	 * @return string Full filesystem path with no trailing slash.
+	 */
+	protected function getUploadDir() {
+		$uploadDirectory = MediaWikiServices::getInstance()
+			->getMainConfig()
+			->get( 'UploadDirectory' );
+		$uploadDir = $uploadDirectory . '/DocBookExport';
+		if ( !is_dir( $uploadDir ) ) {
+			mkdir( $uploadDir );
+		}
+		$uploadDirFull = rtrim( realpath( $uploadDir ), DIRECTORY_SEPARATOR );
+		if ( !is_dir( $uploadDirFull ) ) {
+			throw new Exception( "Unable to create directory: $uploadDir" );
+		}
+		return $uploadDirFull;
 	}
 }
 
