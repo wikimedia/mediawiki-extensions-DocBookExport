@@ -39,7 +39,7 @@ class DocBookExportAPI extends ApiBase {
 		<book>';
 
 		$all_files = array();
-		$docbook_folder = str_replace( ' ', '_', $options['title'] );
+		$docbook_folder = escapeshellcmd( str_replace( ' ', '_', $options['title'] ) );
 		$index_terms = array();
 		if ( array_key_exists( 'index terms', $options ) ) {
 			$index_terms = explode( ",", $options['index terms'] );
@@ -303,7 +303,7 @@ class DocBookExportAPI extends ApiBase {
 		if ( !file_put_contents( $temp_file, $dom->saveHTML() ) ) {
 			return '';
 		}
-		$cmd = $wgDocBookExportPandocPath . " ". $temp_file . " -f html -t docbook 2>&1";
+		$cmd = escapeshellcmd( $wgDocBookExportPandocPath ) . " ". $temp_file . " -f html -t docbook 2>&1";
 		$pandoc_output = shell_exec( $cmd );
 
 		if ( !$pandoc_output ) {
