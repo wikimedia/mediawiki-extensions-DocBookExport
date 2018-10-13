@@ -23,6 +23,11 @@
 	"APIModules": {
 		"getdocbook": "DocBookExportAPI"
 	},
+	"MessagesDirs": {
+		"DocBookExport": [
+			"i18n"
+		]
+	},
 	"ExtensionMessagesFiles": {
 		"DocBookExportMagic": "DocBookExport.i18n.magic.php"
 	},
