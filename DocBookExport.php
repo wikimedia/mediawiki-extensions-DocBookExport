@@ -5,7 +5,16 @@ class DocBookExport {
 	public static function onParserSetup( Parser &$parser ) {
 		$parser->setHook( 'docbook', 'DocBookExport::parseDocBookSyntaxTagExtension' );
 		$parser->setFunctionHook( 'docbook', 'DocBookExport::parseDocBookSyntaxParserFunction' );
+		$parser->setFunctionHook( 'footnote', 'DocBookExport::parseFootNoteParserExtension' );
 		return true;
+	}
+
+	public static function parseFootNoteParserExtension( $parser ) {
+		$options = self::extractOptions( array_slice( func_get_args(), 1 ) );
+		$footnote_para = $options['para'];
+
+		$output = '<a class="footnote" href="'. urlencode( $footnote_para ) .'"></a>';
+		return array( $output, 'noparse' => true, 'isHTML' => true );
 	}
 
 	public static function parseDocBookSyntaxParserFunction( &$parser ) {
@@ -24,13 +33,7 @@ class DocBookExport {
         $serialized = serialize( $options );
         $parser->getOutput()->setProperty( 'docbook', $serialized );
 
-		$api_download_link = $wgScriptPath . '/api.php?action=getdocbook&outputformat=docbook&bookname='. $wgTitle->getText();
-		$api_download_pdf_link = $wgScriptPath . '/api.php?action=getdocbook&outputformat=pdf&bookname='. $wgTitle->getText();
-
-		return '<a href="' . $api_download_link .'">Generate Docbook</a>
-			<br/>
-			<a href="' . $api_download_pdf_link .'">Generate PDF</a>
-			';
+		return Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Get Docbook", [], [ 'bookname' => $wgTitle->getText() ] );
 	}
 
 	public static function extractOptions( array $options ) {

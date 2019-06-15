@@ -10,7 +10,7 @@
 	"type": "other",
 	"AutoloadClasses": {
 		"DocBookExport": "DocBookExport.php",
-		"DocBookExportAPI": "DocBookExportAPI.php"
+		"SpecialGetDocbook": "SpecialGetDocbook.php"
 	},
 	"config": {
 		"DocBookExportPandocPath": "pandoc"
@@ -20,8 +20,8 @@
 			"DocBookExport::onParserSetup"
 		]
 	},
-	"APIModules": {
-		"getdocbook": "DocBookExportAPI"
+	"SpecialPages": {
+		"GetDocbook": "SpecialGetDocbook"
 	},
 	"MessagesDirs": {
 		"DocBookExport": [

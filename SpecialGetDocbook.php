@@ -2,44 +2,59 @@
 
 use MediaWiki\MediaWikiServices;
 
-/**
- * @author Nischayn22
- */
-
-class DocBookExportAPI extends ApiBase {
+class SpecialGetDocbook extends SpecialPage {
 
 	static $excludedTags = array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' );
 
-	public function __construct( $query, $moduleName ) {
-		parent::__construct( $query, $moduleName );
+	public function __construct() {
+		parent::__construct( 'GetDocbook', 'getdocbook' );
 	}
 
-	public function execute() {
-		global $wgServer, $wgScriptPath;
+	private $bookName = '';
 
-		$popts = new ParserOptions();
-		$popts->enableLimitReport( false );
-		$popts->setIsPreview( false );
-		$popts->setIsSectionPreview( false );
-		$popts->setEditSection( false );
-		$popts->setTidy( true );
+	function execute( $query ) {
+		global $wgServer, $wgScriptPath, $wgDocbookExportPandocServerPath;
 
-		$bookName = $this->getMain()->getVal( 'bookname' );
-		$title = Title::newFromText( $bookName );
+		$this->setHeaders();
+		$request = $this->getRequest();
+		$out = $this->getOutput();
 
+		$this->bookName = $request->getVal( 'bookname' );
+		if ( empty( $this->bookName ) ) {
+			$out->wrapWikiMsg(
+				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"This page cannot be called directly"
+			);
+			return;
+		}
+
+		$title = Title::newFromText( $this->bookName );
 		$dbr = wfGetDB( DB_SLAVE );
 		$propValue = $dbr->selectField( 'page_props', // table to use
 			'pp_value', // Field to select
 			array( 'pp_page' => $title->getArticleID(), 'pp_propname' => "docbook" ), // where conditions
 			__METHOD__
 		);
+
 		$options = unserialize( $propValue );
+		if ( !$options ) {
+			$out->wrapWikiMsg(
+				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"Empty docbook structure found."
+			);
+			return;
+		}
+		$docbook_folder = escapeshellcmd( str_replace( ' ', '_', $options['title'] ) );
+		if ( $request->getVal( 'action' ) == "check_status" ) {
+			return $this->getDocbookStatus( $docbook_folder );
+		}
+
+
 		$book_title = '';
 		$book_contents = '<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 		<book>';
 
 		$all_files = array();
-		$docbook_folder = escapeshellcmd( str_replace( ' ', '_', $options['title'] ) );
 		$index_terms = array();
 		if ( array_key_exists( 'index terms', $options ) ) {
 			$index_terms = explode( ",", $options['index terms'] );
@@ -67,8 +82,15 @@ class DocBookExportAPI extends ApiBase {
 		}
 		$index_terms = array_merge( $index_terms, $index_terms_capitalized );
 
+		$popts = new ParserOptions();
+		$popts->enableLimitReport( false );
+		$popts->setIsPreview( false );
+		$popts->setIsSectionPreview( false );
+		$popts->setEditSection( false );
+		$popts->setTidy( true );
+
 		if ( array_key_exists( 'cover page', $options ) ) {
-			$book_contents .= '<info><cover>' . $this->getDocbookfromWikiPage( $options['cover page'], $popts, $docbook_folder, $index_terms, $all_files ) . '</cover></info>';
+			$book_contents .= '<info><cover>' . $this->getHTMLFromWikiPage( $options['cover page'], $all_files, $popts ) . '</cover></info>';
 		}
 
 		$book_contents .= '<title>' . $options['title'] . '</title>';
@@ -88,8 +110,11 @@ class DocBookExportAPI extends ApiBase {
 			$xsl_contents = str_replace( 'FOOTERPLACEHOLDER', $options['footer'], $xsl_contents );
 		}
 
-		file_put_contents( "$uploadDir/$docbook_folder/docbookexport.xsl", $xsl_contents );
-		$all_files["docbookexport.xsl"] = "$uploadDir/$docbook_folder/docbookexport.xsl";
+		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport.xsl", $xsl_contents ) ) {
+			return '';
+		} else {
+			$all_files[] = "$uploadDir/$docbook_folder/docbookexport.xsl";
+		}
 
 		$close_tags = array();
 		$deep_level = 0;
@@ -182,7 +207,7 @@ class DocBookExportAPI extends ApiBase {
 
 			$book_contents .= "<title$custom_header>$display_pagename</title>";
 			foreach( $wiki_pages as $wikipage ) {
-				$book_contents .= $this->getDocbookfromWikiPage( $wikipage, $popts, $docbook_folder, $index_terms, $all_files );
+				$book_contents .= $this->getHTMLFromWikiPage( $wikipage, $all_files, $popts );
 			}
 		}
 		$this_level = $deep_level;
@@ -195,64 +220,103 @@ class DocBookExportAPI extends ApiBase {
 		}
 		$book_contents .= '<index/></book>';
 
-		file_put_contents( "$uploadDir/$docbook_folder/$docbook_folder.xml", $book_contents );
-		$all_files[$options['title'] .'.xml'] = "$uploadDir/$docbook_folder/$docbook_folder.xml";
-
-		$outputformat = $this->getMain()->getVal( 'outputformat' );
-
-		$output_filename = '';
-		$output_filepath = '';
-		$filesize = 0;
-		$content_type = '';
-		if ( $outputformat == 'docbook' ) {
-			$output_filename = $docbook_folder .".zip";
-			$output_filepath = "$uploadDir/". $output_filename;
-			$zip = new ZipArchive();
-
-			if(file_exists($output_filepath)){
-				unlink($output_filepath);
-			}
-			if ($zip->open($output_filepath, ZipArchive::CREATE)!==TRUE) {
-				exit("cannot open <$output_filepath>\n");
-			}
-			foreach($all_files as $filename => $path) {
-				$zip->addFromString($filename, file_get_contents($path));
-			}
-			$zip->close();
-			$filesize = filesize( $output_filepath );
-			$content_type = 'application/zip';
-		} else if ( $outputformat == 'pdf' ) {
-			$output_filename = $docbook_folder .".pdf";
-			$output_filepath = "$uploadDir/". $output_filename;
-
-			shell_exec( "xsltproc --output $uploadDir/$docbook_folder/$docbook_folder.fo $uploadDir/$docbook_folder/docbookexport.xsl $uploadDir/$docbook_folder/$docbook_folder.xml" );
-
-			shell_exec( "fop -fo " . "$uploadDir/$docbook_folder/$docbook_folder.fo -pdf $output_filepath" );
-
-			$filesize = filesize( $output_filepath );
-			$content_type = 'application/pdf';
+		if ( !file_put_contents( "$uploadDir/$docbook_folder/$docbook_folder.html", $book_contents ) ) {
+			return '';
 		} else {
-			$this->getResult()->addValue( 'result', 'failed', 'Invalid output format or not specified');
+			$all_files[] = "$uploadDir/$docbook_folder/$docbook_folder.html";
 		}
 
-		if ( $filesize ) {
-			ob_clean();
-			ob_end_flush();
-			header('Content-Disposition: attachment; filename="'. $output_filename . '"');
-			header('Content-Type: ' . $content_type);
-			header('Content-Length: ' .  $filesize );
-			header('Connection: close');
-			readfile( $output_filepath );
-		} else {
-			$this->getResult()->addValue( 'result', 'success', 'Unable to start auto download. Download using this link: ' . $output_filepath );
+
+		// Set postdata array
+		$postData = [
+			'request_type' => 'getDocbook',
+			'docbook_name' => $docbook_folder,
+		];
+
+		// Create array of files to post
+		foreach ($all_files as $index => $file) {
+			$postData['files[' . $index . ']'] = curl_file_create(
+				realpath($file),
+				mime_content_type($file),
+				basename($file)
+			);
 		}
+		$request = curl_init( $wgDocbookExportPandocServerPath . '/wikiHtmlToDocbookConvertor.php' );
+		curl_setopt($request, CURLOPT_POST, true);
+		curl_setopt($request, CURLOPT_POSTFIELDS, $postData);
+		curl_setopt($request, CURLOPT_RETURNTRANSFER, true);
+		$result = curl_exec($request);
+
+		if ($result === false) {
+			error_log(curl_error($request));
+		}
+
+		curl_close($request);
+
+		$result = json_decode( $result, true );
+		$this->processResponse( $result );
 	}
 
-	public function getDocbookfromWikiPage( $wikipage, $popts, $docbook_folder, $index_terms, &$all_files ) {
-		global $wgDocBookExportPandocPath;
+	public function getDocbookStatus( $docbook_folder ) {
+		global $wgDocbookExportPandocServerPath;
+
+		$this->setHeaders();
+		$request = $this->getRequest();
+		$out = $this->getOutput();
+
+		// Set postdata array
+		$postData = [
+			'request_type' => 'getDocbookStatus',
+			'docbook_name' => $docbook_folder
+		];
+
+		$request = curl_init( $wgDocbookExportPandocServerPath . '/wikiHtmlToDocbookConvertor.php' );
+		curl_setopt($request, CURLOPT_POST, true);
+		curl_setopt($request, CURLOPT_POSTFIELDS, $postData);
+		curl_setopt($request, CURLOPT_RETURNTRANSFER, true);
+		$result = curl_exec($request);
+
+		if ($result === false) {
+			error_log(curl_error($request));
+		}
+
+		curl_close($request);
+		$result = json_decode( $result, true );
+		$this->processResponse( $result );
+	}
+
+	public function processResponse( $result ) {
+		global $wgDocbookExportPandocServerPath;
+
+		$out = $this->getOutput();
+		if ( $result['result'] == 'success' ) {
+			if ( !empty( $result['status'] ) ) {
+				$out->addHTML( "<p>Status: ". $result['status'] ."</p>" );
+				$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Check Status", [], [ 'bookname' => $this->bookName, 'action' => 'check_status' ] );
+				$out->addHTML( "<p>$check_status_link</p>" );
+				if ( $result['status'] == "Docbook generated" ) {
+					$out->addHTML( '<a href="'. $wgDocbookExportPandocServerPath . $result['docbook_zip'] .'">Download Zip</a><br>' );
+					$out->addHTML( '<a href="'. $wgDocbookExportPandocServerPath . $result['docbook_pdf'] .'">Download PDF</a><br>' );
+				}
+			} else {
+				$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Check Status", [], [ 'bookname' => $this->bookName, 'action' => 'check_status' ] );
+				$out->addHTML( "<p>Successfully Sent Request. $check_status_link</p>" );
+			}
+		} else if ( $result['result'] == 'failed' ) {
+			$out->wrapWikiMsg(
+				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				$result['error']
+			);
+		} else {
+			$out->wrapWikiMsg(
+				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"Unknown Error"
+			);
+		}
+	}
+	public function getHTMLFromWikiPage( $wikipage, &$all_files, $popts ) {
 		$placeholderId = 0;
 		$footnotes = array();
-		$xreflabels = array();
 
 		$titleObj = Title::newFromText( $wikipage );
 		$pageObj = new WikiPage( $titleObj );
@@ -270,7 +334,7 @@ class DocBookExportAPI extends ApiBase {
 			$wikitext = preg_replace_callback(
 				'/<ref ?.*>(.*)<\/ref>/',
 				function( $matches ) use ( &$placeholderId ) {
-					return 'PLACEHOLDER-' . ++$placeholderId;
+					return '{{#footnote:para='. $matches[1] .'}}';
 				},
 				$wikitext
 			);
@@ -286,7 +350,7 @@ class DocBookExportAPI extends ApiBase {
 
 		$dom = new DOMDocument();
 		libxml_use_internal_errors(true);
-		$dom->loadHtml('<html>' . $page_html . '</html>');
+		$dom->loadHtml( '<html_pandoc>' . $page_html . '</html_pandoc>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 		libxml_clear_errors();
 
 		foreach( self::$excludedTags as $tag ) {
@@ -294,88 +358,20 @@ class DocBookExportAPI extends ApiBase {
 				$node->parentNode->removeChild( $node );
 			}
 		}
-
-		foreach( $dom->getElementsByTagName( 'figure' ) as $node ) {
-			$xreflabels[] = $node->getAttribute( 'xreflabel' );
-		}
-
-		$temp_file = tempnam(sys_get_temp_dir(), 'docbook_html');
-		if ( !file_put_contents( $temp_file, $dom->saveHTML() ) ) {
-			return '';
-		}
-		$cmd = escapeshellcmd( $wgDocBookExportPandocPath ) . " ". $temp_file . " -f html -t docbook 2>&1";
-		$pandoc_output = shell_exec( $cmd );
-
-		if ( !$pandoc_output ) {
-			return '';
-		}
-
-		$doc = new DOMDocument();
-		$doc->loadXML( '<root xmlns:xlink="http://www.w3.org/1999/xlink">' . $pandoc_output . '</root>' );
-
-		foreach( $doc->getElementsByTagName( 'figure' ) as $node ) {
-			$label = array_shift( $xreflabels );
-			$node->setAttribute( 'xreflabel', $label );
-			$node->setAttribute( 'id', $label );
-			$node->appendChild( $doc->createElement( 'title', $label ) );
-		}
-
-		foreach( $doc->getElementsByTagName( 'imagedata' ) as $node ) {
-			$file_url = $node->getAttribute( 'fileref' );
-			$filename = basename( $file_url );
-			$file_path = wfFindFile( $filename )->getLocalRefPath();
-			$uploadDir = $this->getUploadDir();
-			file_put_contents( "$uploadDir/$docbook_folder/images/$filename", file_get_contents( $file_path ) );
-			$node->setAttribute( 'fileref', "images/$filename" );
-			$all_files["images/$filename"] = "$uploadDir/$docbook_folder/images/$filename";
-		}
-
-		foreach( $doc->getElementsByTagName( 'link' ) as $node ) {
-			if ( $node->hasAttribute( 'role' ) && $node->getAttribute( 'role' ) == 'xref' ) {
-				$label = str_replace( '_', ' ', explode( '#', $node->getAttribute( 'xlink:href' ) )[1] );
-				$xrefNode = $doc->createElement( 'xref' );
-				$xrefNode->setAttribute( 'linkend', $label );
-				$node->parentNode->replaceChild( $xrefNode , $node );
-			} else if ( $node->hasAttributeNS( 'http://www.w3.org/1999/xlink', 'href' ) ) {
-				$href = $node->getAttributeNS( 'http://www.w3.org/1999/xlink', 'href' );
-				$page_name = basename( $href );
-				if ( Title::newFromText( $page_name )->exists() ) {
-					$linkNode = $doc->createElement( 'link' );
-					$linkNode->setAttribute( 'linkend', "page-" . $page_name );
-					$linkNode->nodeValue = $node->nodeValue;
-					$node->parentNode->replaceChild( $linkNode , $node );
-				}
+		foreach( $dom->getElementsByTagName( 'img' ) as $node ) {
+			$file_url = $node->getAttribute( 'src' );
+			if ( wfFindFile( basename( $file_url ) ) ) {
+				$all_files[] = wfFindFile( basename( $file_url ) )->getLocalRefPath();
+			} else {
+				$this->getOutput()->wrapWikiMsg(
+					"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+					"File $file_url not found"
+				);
 			}
+			$node->setAttribute( 'src', basename( $file_url ) );
 		}
 
-		foreach( $doc->getElementsByTagName( 'para' ) as $node ) {
-			if ( $node->hasChildNodes() ) {
-				foreach($node->childNodes as $node) {
-					if ($node->nodeName == '#text') {
-						foreach( $index_terms as $index_term ) {
-							$index_term = trim($index_term);
-							$node->nodeValue = str_replace( $index_term , "INDEXPLACEHOLDERBEGIN" . $index_term . "INDEXPLACEHOLDEREND" . $index_term , $node->nodeValue );
-						}
-					}
-				}
-			}
-		}
-
-		if ( $doc->getElementsByTagName( 'root' )->length > 0 ) {
-			$pandoc_output = '';
-			foreach ( $doc->getElementsByTagName( 'root' )->item(0)->childNodes as $node ) {
-			   $pandoc_output .= $doc->saveXML( $node );
-			}
-		}
-
-		$pandoc_output = str_replace( "INDEXPLACEHOLDERBEGIN", "<indexterm><primary>", $pandoc_output );
-		$pandoc_output = str_replace( "INDEXPLACEHOLDEREND", "</primary></indexterm>", $pandoc_output );
-
-		$placeholderId = 0;
-		foreach( $footnotes as $footnote ) {
-			$pandoc_output = str_replace( 'PLACEHOLDER-' . ++$placeholderId, '<footnote><para>' . $footnote . '</para></footnote>', $pandoc_output );
-		}
-		return '<anchor id="page-'. str_replace( ' ', '_', $wikipage ) .'" />' . $pandoc_output;
+		return $dom->saveHTML();
 	}
 
 	/**

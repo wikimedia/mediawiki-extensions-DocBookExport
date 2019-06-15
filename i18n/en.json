@@ -1,4 +1,5 @@
 {
 	"@metadata": {},
+	"getdocbook": "Get DocBook",
 	"apihelp-getdocbook-summary": "Create a DocBook from a wiki page"
 }
