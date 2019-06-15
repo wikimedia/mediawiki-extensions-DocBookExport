@@ -29,7 +29,7 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		$title = Title::newFromText( $this->bookName );
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr = wfGetDB( DB_REPLICA );
 		$propValue = $dbr->selectField( 'page_props', // table to use
 			'pp_value', // Field to select
 			array( 'pp_page' => $title->getArticleID(), 'pp_propname' => "docbook" ), // where conditions
