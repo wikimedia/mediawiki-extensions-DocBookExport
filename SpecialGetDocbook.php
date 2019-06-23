@@ -295,6 +295,7 @@ class SpecialGetDocbook extends SpecialPage {
 				if ( $result['status'] == "Docbook generated" ) {
 					$out->addHTML( '<a href="'. $wgDocbookExportPandocServerPath . $result['docbook_zip'] .'">Download Zip</a><br>' );
 					$out->addHTML( '<a href="'. $wgDocbookExportPandocServerPath . $result['docbook_pdf'] .'">Download PDF</a><br>' );
+					$out->addHTML( '<a href="'. $wgDocbookExportPandocServerPath . $result['docbook_odf'] .'">Download ODF</a><br>' );
 				}
 			} else {
 				$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Check Status", [], [ 'bookname' => $this->bookName, 'action' => 'check_status' ] );
@@ -323,10 +324,9 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( !$content ) {
 			return '';
 		}
-		$wikitext = $content->getNativeData();
+		$wikitext = '__NOTOC__' . $content->getNativeData();
 
 		preg_match_all( '/<ref ?.*>(.*)<\/ref>/', $wikitext, $matches );
-
 		if ( count( $matches[1] ) > 0 ) {
 			$footnotes = $matches[1];
 			$wikitext = preg_replace_callback(
@@ -336,8 +336,8 @@ class SpecialGetDocbook extends SpecialPage {
 				},
 				$wikitext
 			);
-			$content = new WikitextContent( $wikitext );
 		}
+		$content = new WikitextContent( $wikitext );
 
 		$parser_output = $content->getParserOutput( $titleObj, null, $popts );
 		if ( !$parser_output ) {
