@@ -101,8 +101,6 @@ class SpecialGetDocbook extends SpecialPage {
 		mkdir( "$uploadDir/$docbook_folder/images" );
 
 		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template.xsl' );
-		$docbookXslPath = realpath( __DIR__ .'/docbook-xsl-1.79.1/fo/docbook.xsl' );
-		$xsl_contents = str_replace( 'DOCBOOKXSLPLACEHOLDER', $docbookXslPath, $xsl_contents );
 		if ( array_key_exists( 'header', $options ) ) {
 			$xsl_contents = str_replace( 'HEADERPLACEHOLDER', $options['header'], $xsl_contents );
 		}
