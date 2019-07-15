@@ -80,7 +80,22 @@ class SpecialGetDocbook extends SpecialPage {
 				$index_terms_capitalized[] = lcfirst( $index_term );
 			}
 		}
-		$index_terms = array_merge( $index_terms, $index_terms_capitalized );
+		$index_terms = array_unique( array_merge( $index_terms, $index_terms_capitalized ) );
+
+		$uploadDir = $this->getUploadDir();
+		rrmdir( "$uploadDir/$docbook_folder" );
+		mkdir( "$uploadDir/$docbook_folder" );
+		mkdir( "$uploadDir/$docbook_folder/images" );
+
+		if ( !file_put_contents( "$uploadDir/$docbook_folder/index_terms.json", json_encode( $index_terms ) ) ) {
+			$out->wrapWikiMsg(
+				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"Failed to create file index_terms.json"
+			);
+			return;
+		} else {
+			$all_files[] = "$uploadDir/$docbook_folder/index_terms.json";
+		}
 
 		$popts = new ParserOptions();
 		$popts->enableLimitReport( false );
@@ -89,16 +104,13 @@ class SpecialGetDocbook extends SpecialPage {
 		$popts->setEditSection( false );
 		$popts->setTidy( true );
 
+		$book_contents .= '<info><title>' . $options['title'] . '</title>';
+
 		if ( array_key_exists( 'cover page', $options ) ) {
-			$book_contents .= '<info><cover>' . $this->getHTMLFromWikiPage( $options['cover page'], $all_files, $popts ) . '</cover></info>';
+			$book_contents .= '<cover>' . $this->getHTMLFromWikiPage( $options['cover page'], $all_files, $popts ) . '</cover>';
 		}
 
-		$book_contents .= '<title>' . $options['title'] . '</title>';
-
-		$uploadDir = $this->getUploadDir();
-		rrmdir( "$uploadDir/$docbook_folder" );
-		mkdir( "$uploadDir/$docbook_folder" );
-		mkdir( "$uploadDir/$docbook_folder/images" );
+		$book_contents .= '</info>';
 
 		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template.xsl' );
 		if ( array_key_exists( 'header', $options ) ) {
@@ -109,9 +121,24 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport.xsl", $xsl_contents ) ) {
-			return '';
+			$out->wrapWikiMsg(
+				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"Failed to create file docbookexport.xsl"
+			);
+			return;
 		} else {
 			$all_files[] = "$uploadDir/$docbook_folder/docbookexport.xsl";
+		}
+
+		$css_contents = file_get_contents( __DIR__ . '/docbookexport_styles.css' );
+		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport_styles.css", $css_contents ) ) {
+			$out->wrapWikiMsg(
+				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"Failed to create file docbookexport_styles.css"
+			);
+			return;
+		} else {
+			$all_files[] = "$uploadDir/$docbook_folder/docbookexport_styles.css";
 		}
 
 		$close_tags = array();
@@ -218,10 +245,14 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 		$book_contents .= '<index/></book>';
 
-		if ( !file_put_contents( "$uploadDir/$docbook_folder/$docbook_folder.html", $book_contents ) ) {
-			return '';
+		if ( !file_put_contents( "$uploadDir/$docbook_folder/$docbook_folder.pandochtml", $book_contents ) ) {
+			$out->wrapWikiMsg(
+				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"Failed to create file $docbook_folder.pandochtml"
+			);
+			return;
 		} else {
-			$all_files[] = "$uploadDir/$docbook_folder/$docbook_folder.html";
+			$all_files[] = "$uploadDir/$docbook_folder/$docbook_folder.pandochtml";
 		}
 
 
@@ -293,7 +324,8 @@ class SpecialGetDocbook extends SpecialPage {
 				$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Check Status", [], [ 'bookname' => $this->bookName, 'action' => 'check_status' ] );
 				$out->addHTML( "<p>$check_status_link</p>" );
 				if ( $result['status'] == "Docbook generated" ) {
-					$out->addHTML( '<a href="'. $wgDocbookExportPandocServerPath . $result['docbook_zip'] .'">Download Zip</a><br>' );
+					$out->addHTML( '<a href="'. $wgDocbookExportPandocServerPath . $result['docbook_zip'] .'">Download XML</a><br>' );
+					$out->addHTML( '<a href="'. $wgDocbookExportPandocServerPath . $result['docbook_html'] .'">Download HTML</a><br>' );
 					$out->addHTML( '<a href="'. $wgDocbookExportPandocServerPath . $result['docbook_pdf'] .'">Download PDF</a><br>' );
 					$out->addHTML( '<a href="'. $wgDocbookExportPandocServerPath . $result['docbook_odf'] .'">Download ODF</a><br>' );
 				}
@@ -324,7 +356,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( !$content ) {
 			return '';
 		}
-		$wikitext = '__NOTOC__' . $content->getNativeData();
+		$wikitext = $content->getNativeData() . "\n" . '__NOTOC__';
 
 		preg_match_all( '/<ref ?.*>(.*)<\/ref>/', $wikitext, $matches );
 		if ( count( $matches[1] ) > 0 ) {
