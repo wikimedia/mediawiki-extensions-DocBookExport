@@ -115,9 +115,48 @@ class SpecialGetDocbook extends SpecialPage {
 		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template.xsl' );
 		if ( array_key_exists( 'header', $options ) ) {
 			$xsl_contents = str_replace( 'HEADERPLACEHOLDER', $options['header'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'HEADERPLACEHOLDER', "", $xsl_contents );
 		}
 		if ( array_key_exists( 'footer', $options ) ) {
 			$xsl_contents = str_replace( 'FOOTERPLACEHOLDER', $options['footer'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'FOOTERPLACEHOLDER', "", $xsl_contents );
+		}
+		if ( array_key_exists( 'orientation', $options ) ) {
+			$xsl_contents = str_replace( 'ORIENTATIONPLACEHOLDER', $options['orientation'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'ORIENTATIONPLACEHOLDER', "portrait", $xsl_contents );
+		}
+		if ( array_key_exists( 'size', $options ) ) {
+			$xsl_contents = str_replace( 'SIZEPLACEHOLDER', $options['size'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'SIZEPLACEHOLDER', "USletter", $xsl_contents );
+		}
+		if ( array_key_exists( 'columns', $options ) ) {
+			$xsl_contents = str_replace( 'COLUMNSPLACEHOLDER', $options['columns'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'COLUMNSPLACEHOLDER', "1", $xsl_contents );
+		}
+		if ( array_key_exists( 'margin-inner', $options ) ) {
+			$xsl_contents = str_replace( 'MARINNERPLACEHOLDER', $options['margin-inner'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'MARINNERPLACEHOLDER', "0.5in", $xsl_contents );
+		}
+		if ( array_key_exists( 'margin-outer', $options ) ) {
+			$xsl_contents = str_replace( 'MAROUTERPLACEHOLDER', $options['margin-outer'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'MAROUTERPLACEHOLDER', "0.5in", $xsl_contents );
+		}
+		if ( array_key_exists( 'margin-top', $options ) ) {
+			$xsl_contents = str_replace( 'MARTOPPLACEHOLDER', $options['margin-top'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'MARTOPPLACEHOLDER', "0.5in", $xsl_contents );
+		}
+		if ( array_key_exists( 'margin-bottom', $options ) ) {
+			$xsl_contents = str_replace( 'MARBOTPLACEHOLDER', $options['margin-bottom'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'MARBOTPLACEHOLDER', "0.5in", $xsl_contents );
 		}
 
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport.xsl", $xsl_contents ) ) {
@@ -130,6 +169,16 @@ class SpecialGetDocbook extends SpecialPage {
 			$all_files[] = "$uploadDir/$docbook_folder/docbookexport.xsl";
 		}
 
+		$xsl_contents = file_get_contents( __DIR__ . '/pagenumberprefixes.xsl' );
+		if ( !file_put_contents( "$uploadDir/$docbook_folder/pagenumberprefixes.xsl", $xsl_contents ) ) {
+			$out->wrapWikiMsg(
+				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"Failed to create file pagenumberprefixes.xsl"
+			);
+			return;
+		} else {
+			$all_files[] = "$uploadDir/$docbook_folder/pagenumberprefixes.xsl";
+		}
 		$css_contents = file_get_contents( __DIR__ . '/docbookexport_styles.css' );
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport_styles.css", $css_contents ) ) {
 			$out->wrapWikiMsg(
