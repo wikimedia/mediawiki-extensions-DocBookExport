@@ -128,7 +128,22 @@ class SpecialGetDocbook extends SpecialPage {
 		$book_contents .= '<info><title>' . $options['title'] . '</title>';
 
 		if ( array_key_exists( 'cover page', $options ) ) {
-			$book_contents .= '<cover>' . $this->getHTMLFromWikiPage( $options['cover page'], $all_files, $popts ) . '</cover>';
+			$cover_html = $this->getHTMLFromWikiPage( $options['cover page'], $all_files, $popts );
+			$book_contents .= '<cover>' . $cover_html . '</cover>';
+
+			$orientation = 'portrait';
+			$size = 'LETTER';
+			if ( array_key_exists( 'orientation', $options ) ) {
+				$orientation = $options['orientation'];
+			}
+			if ( array_key_exists( 'size', $options ) ) {
+				$size = $options['size'];
+			}
+
+			$mpdf = new \Mpdf\Mpdf( ['format' => $size, 'orientation' => $orientation] );
+			$mpdf->WriteHTML( $cover_html );
+			$mpdf->Output( "$uploadDir/$docbook_folder/cover.pdf", 'F' );
+			$all_files[] = "$uploadDir/$docbook_folder/cover.pdf";
 		}
 
 		$book_contents .= '</info>';
