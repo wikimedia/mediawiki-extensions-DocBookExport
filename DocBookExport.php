@@ -6,7 +6,15 @@ class DocBookExport {
 		$parser->setHook( 'docbook', 'DocBookExport::parseDocBookSyntaxTagExtension' );
 		$parser->setFunctionHook( 'docbook', 'DocBookExport::parseDocBookSyntaxParserFunction' );
 		$parser->setFunctionHook( 'footnote', 'DocBookExport::parseFootNoteParserExtension' );
+		$parser->setFunctionHook( 'docbook_index', 'DocBookExport::parseDoocBookIndexParserExtension' );
 		return true;
+	}
+
+	public static function parseDoocBookIndexParserExtension( $parser ) {
+		$options = self::extractOptions( array_slice( func_get_args(), 1 ) );
+		$group_by = $options['grouping'];
+        $parser->getOutput()->setProperty( 'docbook_index_group_by', $group_by );
+		return '';
 	}
 
 	public static function parseFootNoteParserExtension( $parser ) {

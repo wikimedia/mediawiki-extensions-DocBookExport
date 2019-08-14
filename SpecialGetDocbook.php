@@ -57,7 +57,19 @@ class SpecialGetDocbook extends SpecialPage {
 		$all_files = array();
 		$index_terms = array();
 		if ( array_key_exists( 'index terms', $options ) ) {
-			$index_terms = explode( ",", $options['index terms'] );
+			foreach( explode( ",", $options['index terms'] ) as $index ) {
+				$index_data = [];
+				$index_title = Title::newFromText( $index );
+				$propValue = $dbr->selectField( 'page_props', // table to use
+					'pp_value', // Field to select
+					array( 'pp_page' => $index_title->getArticleID(), 'pp_propname' => "docbook_index_group_by" ), // where conditions
+					__METHOD__
+				);
+				if ( $propValue !== false ) {
+					$index_data = [ 'primary' => $propValue ];
+				}
+				$index_terms[$index] = $index_data;
+			}
 		}
 
 		$index_categories = array();
@@ -68,19 +80,28 @@ class SpecialGetDocbook extends SpecialPage {
 		foreach( $index_categories as $index_category ) {
 			$categoryMembers = Category::newFromName( $index_category )->getMembers();
 			foreach( $categoryMembers as $index_title ) {
-				$index_terms[] = $index_title->getText();
+				$index_data = [];
+				$propValue = $dbr->selectField( 'page_props', // table to use
+					'pp_value', // Field to select
+					array( 'pp_page' => $index_title->getArticleID(), 'pp_propname' => "docbook_index_group_by" ), // where conditions
+					__METHOD__
+				);
+				if ( $propValue !== false ) {
+					$index_data = [ 'primary' => $propValue ];
+				}
+				$index_terms[$index_title->getText()] = $index_data;
 			}
 		}
 
 		$index_terms_capitalized = array();
-		foreach( $index_terms as $index_term ) {
+		foreach( $index_terms as $index_term => $index_data ) {
 			if ( ucfirst( $index_term ) != $index_term ) {
-				$index_terms_capitalized[] = ucfirst( $index_term );
+				$index_terms_capitalized[ucfirst( $index_term )] = $index_data;
 			} else {
-				$index_terms_capitalized[] = lcfirst( $index_term );
+				$index_terms_capitalized[lcfirst( $index_term )] = $index_data;
 			}
 		}
-		$index_terms = array_unique( array_merge( $index_terms, $index_terms_capitalized ) );
+		$index_terms = array_merge( $index_terms, $index_terms_capitalized );
 
 		$uploadDir = $this->getUploadDir();
 		rrmdir( "$uploadDir/$docbook_folder" );
