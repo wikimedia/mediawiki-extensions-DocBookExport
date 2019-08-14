@@ -140,6 +140,13 @@ class SpecialGetDocbook extends SpecialPage {
 				$size = $options['size'];
 			}
 
+			if ( !class_exists( '\Mpdf\Mpdf' ) ) {
+				$out->wrapWikiMsg(
+					"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+					"Mpdf missing. Install using composer: composer require mpdf/mpdf"
+				);
+				return;
+			}
 			$mpdf = new \Mpdf\Mpdf( ['format' => $size, 'orientation' => $orientation] );
 			$mpdf->WriteHTML( $cover_html );
 			$mpdf->Output( "$uploadDir/$docbook_folder/cover.pdf", 'F' );
