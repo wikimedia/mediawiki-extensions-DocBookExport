@@ -49,7 +49,6 @@ class SpecialGetDocbook extends SpecialPage {
 			return $this->getDocbookStatus( $docbook_folder );
 		}
 
-
 		$book_title = '';
 		$book_contents = '<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 		<book xmlns:xlink="http://www.w3.org/1999/xlink">';
@@ -437,6 +436,7 @@ class SpecialGetDocbook extends SpecialPage {
 			);
 		}
 	}
+
 	public function getHTMLFromWikiPage( $wikipage, &$all_files, $popts ) {
 		$placeholderId = 0;
 		$footnotes = array();
@@ -480,6 +480,21 @@ class SpecialGetDocbook extends SpecialPage {
 				$node->parentNode->removeChild( $node );
 			}
 		}
+
+		// Handle SMW Bug https://github.com/SemanticMediaWiki/SemanticMediaWiki/issues/4232
+		foreach( $dom->getElementsByTagName( 'table' ) as $table ) {
+			if ( $table->getElementsByTagName( 'th' )->item(0)->parentNode->nodeName != 'tr' ) {
+				$table->getElementsByTagName( 'th' )->item(0)->parentNode->insertBefore( $dom->createElement( "tr" ), $table->getElementsByTagName( 'th' )->item(0) );
+				$th_nodes = [];
+				while ($th_node = $table->getElementsByTagName( "th" )->item(0) ) {
+					$th_nodes[] = $th_node->parentNode->removeChild( $th_node );
+				}
+				foreach( $th_nodes as $th_node ) {
+					$table->getElementsByTagName( 'tr' )->item( 0 )->appendChild( $th_node );
+				}
+			}
+		}
+
 		foreach( $dom->getElementsByTagName( 'img' ) as $node ) {
 			$file_url = $node->getAttribute( 'src' );
 			if ( wfFindFile( basename( $file_url ) ) ) {
