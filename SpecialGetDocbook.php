@@ -574,10 +574,18 @@ class SpecialGetDocbook extends SpecialPage {
 			if ( wfFindFile( basename( $file_url ) ) ) {
 				$all_files[] = wfFindFile( basename( $file_url ) )->getLocalRefPath();
 			} else {
-				$this->getOutput()->wrapWikiMsg(
-					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-					"File $file_url not found"
-				);
+				if ( strpos( $file_url, "thumb" ) !== FALSE ) {
+					$parts = explode( "px-", basename( $file_url ) );
+					$width = array_shift( $parts );
+					$file_name = array_shift( $parts );
+					$file = wfFindFile( $file_name );
+					$all_files[] = $file->transform( [ 'width' => $width, 'height' => $height ] )->getLocalCopyPath();
+				} else {
+					$this->getOutput()->wrapWikiMsg(
+						"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
+						"File $file_url not found"
+					);
+				}
 			}
 			$node->setAttribute( 'src', basename( $file_url ) );
 		}
