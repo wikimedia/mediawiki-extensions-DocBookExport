@@ -36,12 +36,16 @@ class DocBookExport {
 	}
 
 	public static function parseDocBookSyntax( &$parser, $options ) {
-		global $wgScriptPath, $wgTitle;
+		global $wgScriptPath;
+
+		if ( $parser->getTitle() == null ) {
+			return "";
+		}
 
         $serialized = serialize( $options );
         $parser->getOutput()->setProperty( 'docbook', $serialized );
 
-		return Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Get Docbook", [], [ 'bookname' => $wgTitle->getText() ] );
+		return Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Get Docbook", [], [ 'bookname' => $parser->getTitle()->getText() ] );
 	}
 
 	public static function extractOptions( array $options ) {
