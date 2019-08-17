@@ -4,13 +4,13 @@ use MediaWiki\MediaWikiServices;
 
 class SpecialGetDocbook extends SpecialPage {
 
-	static $excludedTags = array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' );
-
 	public function __construct() {
 		parent::__construct( 'GetDocbook', 'getdocbook' );
 	}
 
 	private $bookName = '';
+
+	private $section_levels = [ "h2", "h3", "h4", "h5", "h6" ];
 
 	function execute( $query ) {
 		global $wgServer, $wgScriptPath, $wgDocbookExportPandocServerPath;
@@ -22,7 +22,7 @@ class SpecialGetDocbook extends SpecialPage {
 		$this->bookName = $request->getVal( 'bookname' );
 		if ( empty( $this->bookName ) ) {
 			$out->wrapWikiMsg(
-				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 				"This page cannot be called directly"
 			);
 			return;
@@ -39,7 +39,7 @@ class SpecialGetDocbook extends SpecialPage {
 		$options = unserialize( $propValue );
 		if ( !$options ) {
 			$out->wrapWikiMsg(
-				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 				"Empty docbook structure found."
 			);
 			return;
@@ -77,16 +77,46 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		foreach( $index_categories as $index_category ) {
-			$categoryMembers = Category::newFromName( $index_category )->getMembers();
+			$parts = explode( '(', $index_category );
+			$category_name = $parts[0];
+			$categoryMembers = Category::newFromName( trim( $category_name ) )->getMembers();
 			foreach( $categoryMembers as $index_title ) {
 				$index_data = [];
-				$propValue = $dbr->selectField( 'page_props', // table to use
-					'pp_value', // Field to select
-					array( 'pp_page' => $index_title->getArticleID(), 'pp_propname' => "docbook_index_group_by" ), // where conditions
-					__METHOD__
-				);
-				if ( $propValue !== false ) {
-					$index_data = [ 'primary' => $propValue ];
+				if ( count( $parts ) > 1 ) {
+					$line_props = explode( ')', $parts[1] )[0];
+					$chunks = array_chunk(preg_split('/(=|,)/', $line_props), 2); // See https://stackoverflow.com/a/32768029/1150075
+					$line_props = array_combine(array_column($chunks, 0), array_column($chunks, 1));
+					$grouping_property = '';
+					if ( array_key_exists( 'group_by', $line_props ) ) {
+						$grouping_property = $line_props['group_by'];
+					}
+					if ( array_key_exists( 'group by', $line_props ) ) {
+						$grouping_property = $line_props['group by'];
+					}
+					if ( !empty( $grouping_property ) ) {
+						$page = SMWDIWikiPage::newFromTitle( $index_title );
+						$store = \SMW\StoreFactory::getStore();
+						$data = $store->getSemanticData( $page );
+						$property = SMWDIProperty::newFromUserLabel( $grouping_property );
+						$values = $data->getPropertyValues( $property );
+						if ( count( $values ) > 0 ) {
+							$value = array_shift( $values );
+							if ( $value->getDIType() == SMWDataItem::TYPE_STRING ) {
+								$index_data = [ 'primary' => $value->getString() ];
+							} else if ( $value->getDIType() == SMWDataItem::TYPE_WIKIPAGE ) {
+								$index_data = [ 'primary' => $value->getTitle()->getText() ];
+							}
+						}
+					}
+				} else {
+					$propValue = $dbr->selectField( 'page_props', // table to use
+						'pp_value', // Field to select
+						array( 'pp_page' => $index_title->getArticleID(), 'pp_propname' => "docbook_index_group_by" ), // where conditions
+						__METHOD__
+					);
+					if ( $propValue !== false ) {
+						$index_data = [ 'primary' => $propValue ];
+					}
 				}
 				$index_terms[$index_title->getText()] = $index_data;
 			}
@@ -109,7 +139,7 @@ class SpecialGetDocbook extends SpecialPage {
 
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/index_terms.json", json_encode( $index_terms ) ) ) {
 			$out->wrapWikiMsg(
-				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 				"Failed to create file index_terms.json"
 			);
 			return;
@@ -141,7 +171,7 @@ class SpecialGetDocbook extends SpecialPage {
 
 			if ( !class_exists( '\Mpdf\Mpdf' ) ) {
 				$out->wrapWikiMsg(
-					"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 					"Mpdf missing. Install using composer: composer require mpdf/mpdf"
 				);
 				return;
@@ -203,7 +233,7 @@ class SpecialGetDocbook extends SpecialPage {
 
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport.xsl", $xsl_contents ) ) {
 			$out->wrapWikiMsg(
-				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 				"Failed to create file docbookexport.xsl"
 			);
 			return;
@@ -214,7 +244,7 @@ class SpecialGetDocbook extends SpecialPage {
 		$xsl_contents = file_get_contents( __DIR__ . '/pagenumberprefixes.xsl' );
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/pagenumberprefixes.xsl", $xsl_contents ) ) {
 			$out->wrapWikiMsg(
-				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 				"Failed to create file pagenumberprefixes.xsl"
 			);
 			return;
@@ -224,7 +254,7 @@ class SpecialGetDocbook extends SpecialPage {
 		$css_contents = file_get_contents( __DIR__ . '/docbookexport_styles.css' );
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport_styles.css", $css_contents ) ) {
 			$out->wrapWikiMsg(
-				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 				"Failed to create file docbookexport_styles.css"
 			);
 			return;
@@ -304,21 +334,20 @@ class SpecialGetDocbook extends SpecialPage {
 			}
 
 			$parts = explode( '(', $after_identifier );
+			$wiki_pages = explode( ',', $parts[0] );
+			$display_pagename = $wiki_pages[0];
 
 			if ( count( $parts ) == 2 ) {
-				$wiki_pages = explode( ',', $parts[0] );
 				$line_props = explode( ')', $parts[1] )[0];
 				$chunks = array_chunk(preg_split('/(=|,)/', $line_props), 2); // See https://stackoverflow.com/a/32768029/1150075
 				$line_props = array_combine(array_column($chunks, 0), array_column($chunks, 1));
 				if ( array_key_exists( 'title', $line_props ) ) {
 					$display_pagename = $line_props['title'];
+				} else {
 				}
 				if ( array_key_exists( 'header', $line_props ) ) {
 					$custom_header = ' header="' . $line_props['header']. '"';
 				}
-			} else {
-				$wiki_pages = explode( ',', $parts[0] );
-				$display_pagename = $wiki_pages[0];
 			}
 
 			$book_contents .= "<title$custom_header>$display_pagename</title>";
@@ -336,9 +365,18 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 		$book_contents .= '<index/></book>';
 
+		$status = $this->checkForErrors( $book_contents );
+		if ( !$status->isGood() ) {
+			$out->wrapWikiMsg(
+				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
+				$status->getMessage()
+			);
+			return;
+		}
+
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/$docbook_folder.pandochtml", $book_contents ) ) {
 			$out->wrapWikiMsg(
-				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 				"Failed to create file $docbook_folder.pandochtml"
 			);
 			return;
@@ -377,6 +415,25 @@ class SpecialGetDocbook extends SpecialPage {
 		$this->processResponse( $result );
 	}
 
+	protected function checkForErrors( $book_contents ) {
+		$dom = new DOMDocument();
+		libxml_use_internal_errors(true);
+		$dom->loadHtml( $book_contents, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+		libxml_clear_errors();
+
+		$anchor_ids = [];
+		foreach( $dom->getElementsByTagName( 'span' ) as $span ) {
+			if ( $span->hasAttribute( 'id' ) ) {
+				$span_id = $span->getAttribute( 'id' );
+				if ( in_array( $span_id, $anchor_ids ) ) {
+					return Status::newFatal( "ID $span_id already defined." );
+				} else {
+					$anchor_ids[] = $span_id;
+				}
+			}
+		}
+		return Status::newGood();
+	}
 	public function getDocbookStatus( $docbook_folder ) {
 		global $wgDocbookExportPandocServerPath;
 
@@ -426,12 +483,12 @@ class SpecialGetDocbook extends SpecialPage {
 			}
 		} else if ( $result['result'] == 'failed' ) {
 			$out->wrapWikiMsg(
-				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 				$result['error']
 			);
 		} else {
 			$out->wrapWikiMsg(
-				"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 				"Unknown Error"
 			);
 		}
@@ -470,14 +527,31 @@ class SpecialGetDocbook extends SpecialPage {
 
 		$page_html = $parser_output->getText();
 
+		$page_html = $this->recursiveFindSections( $page_html, 0 );
+
 		$dom = new DOMDocument();
 		libxml_use_internal_errors(true);
-		$dom->loadHtml( '<html_pandoc>' . $page_html . '</html_pandoc>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+		$dom->loadHtml( '<html>' . $page_html . '</html>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 		libxml_clear_errors();
 
-		foreach( self::$excludedTags as $tag ) {
-			foreach( $dom->getElementsByTagName( $tag ) as $node ) {
-				$node->parentNode->removeChild( $node );
+		foreach( $dom->getElementsByTagName( 'table' ) as $table ) {
+			$classes = $table->getAttribute( 'class' );
+			$classes = explode( " ", $classes );
+			foreach( $classes as $class ) {
+				if ( strpos( $class, "colwidth" ) !== FALSE ) {
+					$colwidths = explode( "-", $class );
+					array_shift( $colwidths );
+					if ( $table->getElementsByTagName( "caption" )->length > 0 ) {
+						$table->insertBefore( $dom->createElement( "colgroup" ), $table->getElementsByTagName( "caption" )->item(0)->nextSibling );
+					} else {
+						$table->insertBefore( $dom->createElement( "colgroup" ), $table->firstChild );
+					}
+					foreach( $colwidths as $colwidth ) {
+						$col = $dom->createElement( "col" );
+						$col->setAttribute( "width", $colwidth . "%" );
+						$table->getElementsByTagName( 'colgroup' )->item(0)->appendChild( $col );
+					}
+				}
 			}
 		}
 
@@ -501,14 +575,64 @@ class SpecialGetDocbook extends SpecialPage {
 				$all_files[] = wfFindFile( basename( $file_url ) )->getLocalRefPath();
 			} else {
 				$this->getOutput()->wrapWikiMsg(
-					"<div class=\"errorbox\">\n$1\n</div><br clear=\"both\" />",
+					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 					"File $file_url not found"
 				);
 			}
 			$node->setAttribute( 'src', basename( $file_url ) );
 		}
 
-		return $dom->saveHTML();
+		$html = $dom->saveHTML();
+
+		$html = str_replace( "</html>", "", $html );
+		$html = str_replace( "<html>", "", $html );
+
+		return $html;
+	}
+
+	protected function recursiveFindSections( $page_html, $section_level ) {
+		$section_header = $this->section_levels[$section_level];
+		$no_sections = true;
+		$offset = 0;
+		$new_page_html = '';
+		$open_section = false;
+		while( ( $pos = strpos( $page_html, "<$section_header>", $offset ) ) !== FALSE ) {
+			$no_sections = false;
+			if ( $pos != 0 ) {
+				if ( $section_level == ( count( $this->section_levels ) -1 ) ) {
+					$new_page_html .= '<html_pandoc>' . substr( $page_html, $offset, $pos - $offset ) . '</html_pandoc>';
+				} else {
+					$new_page_html .= $this->recursiveFindSections( substr( $page_html, $offset, $pos - $offset ), $section_level+1 );
+				}
+			}
+			if ( $open_section ) {
+				$new_page_html .= '</section>';
+				$open_section = false;
+			}
+			$pos += 4;
+			$offset = strpos( $page_html, "</$section_header>", $pos );
+			$new_page_html .= '<section><title><html_pandoc>' . substr( $page_html, $pos, $offset - $pos ) . '</html_pandoc></title>';
+			$offset += 5;
+			$open_section = true;
+		}
+		if ( $open_section ) {
+			if ( $section_level == ( count( $this->section_levels ) -1 ) ) {
+				$new_page_html .= '<html_pandoc>' . substr( $page_html, $offset, strlen( $page_html ) - $offset ) . '</html_pandoc>';
+			} else {
+				$new_page_html .= $this->recursiveFindSections( substr( $page_html, $offset, strlen( $page_html ) - $offset ), $section_level + 1 );
+			}
+			$new_page_html .= '</section>';
+			$open_section = false;
+			$page_html = $new_page_html;
+		}
+		if ( $no_sections ) {
+			if ( $section_level == ( count( $this->section_levels ) -1 ) ) {
+				$page_html = '<html_pandoc>' . $page_html . '</html_pandoc>';
+			} else {
+				$page_html = $this->recursiveFindSections( $page_html, $section_level + 1 );
+			}
+		}
+		return $page_html;
 	}
 
 	/**
