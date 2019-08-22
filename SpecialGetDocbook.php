@@ -384,7 +384,6 @@ class SpecialGetDocbook extends SpecialPage {
 			$all_files[] = "$uploadDir/$docbook_folder/$docbook_folder.pandochtml";
 		}
 
-
 		// Set postdata array
 		$postData = [
 			'request_type' => 'getDocbook',
@@ -399,6 +398,7 @@ class SpecialGetDocbook extends SpecialPage {
 				basename($file)
 			);
 		}
+
 		$request = curl_init( $wgDocbookExportPandocServerPath . '/wikiHtmlToDocbookConvertor.php' );
 		curl_setopt($request, CURLOPT_POST, true);
 		curl_setopt($request, CURLOPT_POSTFIELDS, $postData);
@@ -505,7 +505,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( !$content ) {
 			return '';
 		}
-		$wikitext = $content->getNativeData() . "\n" . '__NOTOC__';
+		$wikitext = $content->getNativeData() . "\n" . '__NOTOC__ __NOEDITSECTION__';
 
 		preg_match_all( '/<ref ?.*>(.*)<\/ref>/', $wikitext, $matches );
 		if ( count( $matches[1] ) > 0 ) {
@@ -527,7 +527,7 @@ class SpecialGetDocbook extends SpecialPage {
 
 		$page_html = $parser_output->getText();
 
-		$page_html = $this->recursiveFindSections( $page_html, 0 );
+		$page_html = $this->recursiveFindSections( $wikipage, $page_html, 0 );
 
 		$dom = new DOMDocument();
 		libxml_use_internal_errors(true);
@@ -572,7 +572,10 @@ class SpecialGetDocbook extends SpecialPage {
 		foreach( $dom->getElementsByTagName( 'img' ) as $node ) {
 			$file_url = $node->getAttribute( 'src' );
 			if ( wfFindFile( basename( $file_url ) ) ) {
-				$all_files[] = wfFindFile( basename( $file_url ) )->getLocalRefPath();
+				$file_path = wfFindFile( basename( $file_url ) )->getLocalRefPath();
+				if ( $file_path ) {
+					$all_files[] = $file_path;
+				}
 			} else {
 				if ( strpos( $file_url, "thumb" ) !== FALSE ) {
 					$parts = explode( "px-", basename( $file_url ) );
@@ -598,7 +601,7 @@ class SpecialGetDocbook extends SpecialPage {
 		return $html;
 	}
 
-	protected function recursiveFindSections( $page_html, $section_level ) {
+	protected function recursiveFindSections( $wikipage, $page_html, $section_level ) {
 		$section_header = $this->section_levels[$section_level];
 		$no_sections = true;
 		$offset = 0;
@@ -610,7 +613,7 @@ class SpecialGetDocbook extends SpecialPage {
 				if ( $section_level == ( count( $this->section_levels ) -1 ) ) {
 					$new_page_html .= '<html_pandoc>' . substr( $page_html, $offset, $pos - $offset ) . '</html_pandoc>';
 				} else {
-					$new_page_html .= $this->recursiveFindSections( substr( $page_html, $offset, $pos - $offset ), $section_level+1 );
+					$new_page_html .= $this->recursiveFindSections( $wikipage, substr( $page_html, $offset, $pos - $offset ), $section_level+1 );
 				}
 			}
 			if ( $open_section ) {
@@ -619,7 +622,9 @@ class SpecialGetDocbook extends SpecialPage {
 			}
 			$pos += 4;
 			$offset = strpos( $page_html, "</$section_header>", $pos );
-			$new_page_html .= '<section><title><html_pandoc>' . substr( $page_html, $pos, $offset - $pos ) . '</html_pandoc></title>';
+			$title_html = substr( $page_html, $pos, $offset - $pos );
+			$title_html = str_replace( 'id="', 'id="' . str_replace( " ", "_", $wikipage ) . '_', $title_html );
+			$new_page_html .= '<section><title><html_pandoc>' . $title_html . '</html_pandoc></title>';
 			$offset += 5;
 			$open_section = true;
 		}
@@ -627,7 +632,7 @@ class SpecialGetDocbook extends SpecialPage {
 			if ( $section_level == ( count( $this->section_levels ) -1 ) ) {
 				$new_page_html .= '<html_pandoc>' . substr( $page_html, $offset, strlen( $page_html ) - $offset ) . '</html_pandoc>';
 			} else {
-				$new_page_html .= $this->recursiveFindSections( substr( $page_html, $offset, strlen( $page_html ) - $offset ), $section_level + 1 );
+				$new_page_html .= $this->recursiveFindSections( $wikipage, substr( $page_html, $offset, strlen( $page_html ) - $offset ), $section_level + 1 );
 			}
 			$new_page_html .= '</section>';
 			$open_section = false;
@@ -637,7 +642,7 @@ class SpecialGetDocbook extends SpecialPage {
 			if ( $section_level == ( count( $this->section_levels ) -1 ) ) {
 				$page_html = '<html_pandoc>' . $page_html . '</html_pandoc>';
 			} else {
-				$page_html = $this->recursiveFindSections( $page_html, $section_level + 1 );
+				$page_html = $this->recursiveFindSections( $wikipage, $page_html, $section_level + 1 );
 			}
 		}
 		return $page_html;
