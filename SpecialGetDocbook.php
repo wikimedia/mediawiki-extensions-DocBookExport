@@ -607,11 +607,14 @@ class SpecialGetDocbook extends SpecialPage {
 		$offset = 0;
 		$new_page_html = '';
 		$open_section = false;
+
 		while( ( $pos = strpos( $page_html, "<$section_header>", $offset ) ) !== FALSE ) {
 			$no_sections = false;
 			if ( $pos != 0 ) {
 				if ( $section_level == ( count( $this->section_levels ) -1 ) ) {
-					$new_page_html .= '<html_pandoc>' . substr( $page_html, $offset, $pos - $offset ) . '</html_pandoc>';
+					$temp_html = '<html_pandoc>' . substr( $page_html, $offset, $pos - $offset ) . '</html_pandoc>';
+					$temp_html = makeProperHtml( $temp_html );
+					$new_page_html .= $temp_html;
 				} else {
 					$new_page_html .= $this->recursiveFindSections( $wikipage, substr( $page_html, $offset, $pos - $offset ), $section_level+1 );
 				}
@@ -630,7 +633,9 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 		if ( $open_section ) {
 			if ( $section_level == ( count( $this->section_levels ) -1 ) ) {
-				$new_page_html .= '<html_pandoc>' . substr( $page_html, $offset, strlen( $page_html ) - $offset ) . '</html_pandoc>';
+				$temp_html = '<html_pandoc>' . substr( $page_html, $offset, strlen( $page_html ) - $offset ) . '</html_pandoc>';
+				$temp_html = makeProperHtml( $temp_html );
+				$new_page_html .= $temp_html;
 			} else {
 				$new_page_html .= $this->recursiveFindSections( $wikipage, substr( $page_html, $offset, strlen( $page_html ) - $offset ), $section_level + 1 );
 			}
@@ -640,7 +645,7 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 		if ( $no_sections ) {
 			if ( $section_level == ( count( $this->section_levels ) -1 ) ) {
-				$page_html = '<html_pandoc>' . $page_html . '</html_pandoc>';
+				$page_html = makeProperHtml( '<html_pandoc>' . $page_html . '</html_pandoc>' );
 			} else {
 				$page_html = $this->recursiveFindSections( $wikipage, $page_html, $section_level + 1 );
 			}
@@ -666,6 +671,14 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 		return $uploadDirFull;
 	}
+}
+
+function makeProperHtml( $improperHtml ) {
+	$dom = new DOMDocument();
+	libxml_use_internal_errors(true);
+	$dom->loadHtml( $improperHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+	libxml_clear_errors();
+	return $dom->saveHTML();
 }
 
 function rrmdir($dir) { 
