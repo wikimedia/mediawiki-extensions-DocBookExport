@@ -158,6 +158,9 @@ class SpecialGetDocbook extends SpecialPage {
 
 		if ( array_key_exists( 'cover page', $options ) ) {
 			$cover_html = $this->getHTMLFromWikiPage( $options['cover page'], $all_files, $popts );
+			if ( $options['timestamp'] == '1' ) {
+				$cover_html .= '<div style="margin-top:10px;clear:both;text-align: right;">Produced from '. $wgServer .' on '. date("Y-m-d H:i:s") .'</div>';
+			}
 			$book_contents .= '<cover>' . $cover_html . '</cover>';
 
 			$orientation = 'portrait';
