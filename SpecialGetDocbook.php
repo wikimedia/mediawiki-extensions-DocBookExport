@@ -409,7 +409,11 @@ class SpecialGetDocbook extends SpecialPage {
 		$result = curl_exec($request);
 
 		if ($result === false) {
-			error_log(curl_error($request));
+			$out->wrapWikiMsg(
+				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
+				"Error: " . curl_error($request)
+			);
+			return;
 		}
 
 		curl_close($request);
@@ -457,7 +461,11 @@ class SpecialGetDocbook extends SpecialPage {
 		$result = curl_exec($request);
 
 		if ($result === false) {
-			error_log(curl_error($request));
+			$out->wrapWikiMsg(
+				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
+				"Error: " . curl_error($request)
+			);
+			return;
 		}
 
 		curl_close($request);
@@ -492,7 +500,7 @@ class SpecialGetDocbook extends SpecialPage {
 		} else {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Unknown Error"
+				"Unknown Error. Response data:" . json_encode( $result )
 			);
 		}
 	}
@@ -574,24 +582,38 @@ class SpecialGetDocbook extends SpecialPage {
 
 		foreach( $dom->getElementsByTagName( 'img' ) as $node ) {
 			$file_url = $node->getAttribute( 'src' );
+			$error = false;
 			if ( wfFindFile( basename( $file_url ) ) ) {
 				$file_path = wfFindFile( basename( $file_url ) )->getLocalRefPath();
-				if ( $file_path ) {
-					$all_files[] = $file_path;
-				}
 			} else {
 				if ( strpos( $file_url, "thumb" ) !== FALSE ) {
 					$parts = explode( "px-", basename( $file_url ) );
 					$width = array_shift( $parts );
 					$file_name = array_shift( $parts );
 					$file = wfFindFile( $file_name );
-					$all_files[] = $file->transform( [ 'width' => $width, 'height' => $height ] )->getLocalCopyPath();
+					if ( !$file ) {
+						if ( substr_count( $file_name, "." ) > 1 ) { // In case of filename.svg files the thumbnail file can be filename.svg.png
+							$file_name = substr( $file_name, 0, strrpos( $file_name, '.' ) );
+							$file = wfFindFile( $file_name );
+						}
+					}
+					if ( $file ) {
+						$file_path = $file->transform( [ 'width' => $width, 'height' => $height ] )->getLocalCopyPath();
+					} else {
+						$error = true;
+					}
 				} else {
-					$this->getOutput()->wrapWikiMsg(
-						"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-						"File $file_url not found"
-					);
+					$error = true;
 				}
+			}
+			if ( $file_path ) {
+				$all_files[] = $file_path;
+			}
+			if ( $error ) {
+				$this->getOutput()->wrapWikiMsg(
+					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
+					"File $file_url not found"
+				);
 			}
 			$node->setAttribute( 'src', basename( $file_url ) );
 		}
