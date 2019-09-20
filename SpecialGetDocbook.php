@@ -506,6 +506,8 @@ class SpecialGetDocbook extends SpecialPage {
 	}
 
 	public function getHTMLFromWikiPage( $wikipage, &$all_files, $popts ) {
+		global $wgServer;
+
 		$placeholderId = 0;
 		$footnotes = array();
 
@@ -577,6 +579,13 @@ class SpecialGetDocbook extends SpecialPage {
 				foreach( $th_nodes as $th_node ) {
 					$table->getElementsByTagName( 'tr' )->item( 0 )->appendChild( $th_node );
 				}
+			}
+		}
+
+		foreach( $dom->getElementsByTagName( 'a' ) as $node ) {
+			$url = $node->getAttribute( 'href' );
+			if ( $url[0] == '/' ) {
+				$node->setAttribute( 'href', $wgServer . $url );
 			}
 		}
 
