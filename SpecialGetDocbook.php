@@ -44,12 +44,20 @@ class SpecialGetDocbook extends SpecialPage {
 			);
 			return;
 		}
+
 		$docbook_folder = escapeshellcmd( str_replace( ' ', '_', $options['title'] ) );
+		if ( strpos( $docbook_folder, "(" ) !== false || strpos( $docbook_folder, ")" ) !== false ) {
+			$out->wrapWikiMsg(
+				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
+				"Title cannot contain parenthesis."
+			);
+			return;
+		}
+
 		if ( $request->getVal( 'action' ) == "check_status" ) {
 			return $this->getDocbookStatus( $docbook_folder );
 		}
 
-		$book_title = '';
 		$book_contents = '<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 		<book xmlns:xlink="http://www.w3.org/1999/xlink">';
 
