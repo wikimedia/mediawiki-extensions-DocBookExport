@@ -24,7 +24,7 @@
 
     <fo:block>
 		<xsl:choose>
-			<xsl:when test="$pageclass = 'body'">
+			<xsl:when test="$sequence != 'blank' and $pageclass = 'body'">
 				<xsl:choose>
 					<xsl:when test="$position = 'center'">
 						<xsl:choose>
