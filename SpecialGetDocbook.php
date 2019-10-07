@@ -8,7 +8,8 @@ class SpecialGetDocbook extends SpecialPage {
 		parent::__construct( 'GetDocbook', 'getdocbook' );
 	}
 
-	private $bookName = '';
+	private $embed_page = '';
+	private $bookname = '';
 
 	private $section_levels = [ "h2", "h3", "h4", "h5", "h6" ];
 
@@ -19,8 +20,9 @@ class SpecialGetDocbook extends SpecialPage {
 		$request = $this->getRequest();
 		$out = $this->getOutput();
 
-		$this->bookName = $request->getVal( 'bookname' );
-		if ( empty( $this->bookName ) ) {
+		$this->embed_page = $request->getVal( 'embed_page' );
+		$this->bookname = $request->getVal( 'bookname' );
+		if ( empty( $this->embed_page ) ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 				"This page cannot be called directly"
@@ -28,11 +30,11 @@ class SpecialGetDocbook extends SpecialPage {
 			return;
 		}
 
-		$title = Title::newFromText( $this->bookName );
+		$title = Title::newFromText( $this->embed_page );
 		$dbr = wfGetDB( DB_REPLICA );
 		$propValue = $dbr->selectField( 'page_props', // table to use
 			'pp_value', // Field to select
-			array( 'pp_page' => $title->getArticleID(), 'pp_propname' => "docbook" ), // where conditions
+			array( 'pp_page' => $title->getArticleID(), 'pp_propname' => "docbook_" . $this->bookname ), // where conditions
 			__METHOD__
 		);
 
@@ -488,7 +490,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( $result['result'] == 'success' ) {
 			if ( !empty( $result['status'] ) ) {
 				$out->addHTML( "<p>Status: ". $result['status'] ."</p>" );
-				$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Check Status", [], [ 'bookname' => $this->bookName, 'action' => 'check_status' ] );
+				$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Check Status", [], [ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'check_status' ] );
 				$out->addHTML( "<p>$check_status_link</p>" );
 				if ( $result['status'] == "Docbook generated" ) {
 					$out->addHTML( '<a href="'. $wgDocbookExportPandocServerPath . $result['docbook_zip'] .'">Download XML</a><br>' );
@@ -497,7 +499,7 @@ class SpecialGetDocbook extends SpecialPage {
 					$out->addHTML( '<a href="'. $wgDocbookExportPandocServerPath . $result['docbook_odf'] .'">Download ODF</a><br>' );
 				}
 			} else {
-				$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Check Status", [], [ 'bookname' => $this->bookName, 'action' => 'check_status' ] );
+				$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Check Status", [], [ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'check_status' ] );
 				$out->addHTML( "<p>Successfully Sent Request. $check_status_link</p>" );
 			}
 		} else if ( $result['result'] == 'failed' ) {
