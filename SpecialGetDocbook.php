@@ -167,6 +167,15 @@ class SpecialGetDocbook extends SpecialPage {
 		$book_contents .= '<info><title>' . $options['title'] . '</title>';
 
 		if ( array_key_exists( 'cover page', $options ) ) {
+
+			$titleObj = Title::newFromText( $options['cover page'] );
+			if ( $titleObj == null || !$titleObj->exists() ) {
+				$out->wrapWikiMsg(
+					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
+					"Could not find page: " . $options['cover page']
+				);
+				return;
+			}
 			$cover_html = $this->getHTMLFromWikiPage( $options['cover page'], $all_files, $popts );
 			if ( $options['timestamp'] == '1' ) {
 				$cover_html .= '<div style="margin-top:10px;clear:both;text-align: right;">Produced from '. $wgServer .' on '. date("Y-m-d H:i:s") .'</div>';
@@ -356,7 +365,6 @@ class SpecialGetDocbook extends SpecialPage {
 				$line_props = array_combine(array_column($chunks, 0), array_column($chunks, 1));
 				if ( array_key_exists( 'title', $line_props ) ) {
 					$display_pagename = $line_props['title'];
-				} else {
 				}
 				if ( array_key_exists( 'header', $line_props ) ) {
 					$custom_header = ' header="' . $line_props['header']. '"';
@@ -365,6 +373,14 @@ class SpecialGetDocbook extends SpecialPage {
 
 			$book_contents .= "<title$custom_header>$display_pagename</title>";
 			foreach( $wiki_pages as $wikipage ) {
+				$titleObj = Title::newFromText( $wikipage );
+				if ( $titleObj == null || !$titleObj->exists() ) {
+					$out->wrapWikiMsg(
+						"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
+						"Could not find page: " . $wikipage
+					);
+					return;
+				}
 				$book_contents .= $this->getHTMLFromWikiPage( $wikipage, $all_files, $popts );
 			}
 		}
