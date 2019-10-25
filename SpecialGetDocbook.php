@@ -442,10 +442,11 @@ class SpecialGetDocbook extends SpecialPage {
 			return;
 		}
 
+		$httpcode = curl_getinfo($request, CURLINFO_HTTP_CODE);
 		curl_close($request);
 
 		$result = json_decode( $result, true );
-		$this->processResponse( $result );
+		$this->processResponse( $httpcode, $result );
 	}
 
 	protected function checkForErrors( $book_contents ) {
@@ -493,13 +494,14 @@ class SpecialGetDocbook extends SpecialPage {
 			);
 			return;
 		}
-
+		$httpcode = curl_getinfo($request, CURLINFO_HTTP_CODE);
 		curl_close($request);
+
 		$result = json_decode( $result, true );
-		$this->processResponse( $result );
+		$this->processResponse( $httpcode, $result );
 	}
 
-	public function processResponse( $result ) {
+	public function processResponse( $httpcode, $result ) {
 		global $wgDocbookExportPandocServerPath;
 
 		$out = $this->getOutput();
@@ -526,7 +528,7 @@ class SpecialGetDocbook extends SpecialPage {
 		} else {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Unknown Error. Response data:" . json_encode( $result )
+				"Unknown Error. Response data:" . json_encode( $result ) . " Response Code: " . $httpcode
 			);
 		}
 	}
