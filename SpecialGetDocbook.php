@@ -34,7 +34,7 @@ class SpecialGetDocbook extends SpecialPage {
 		$dbr = wfGetDB( DB_REPLICA );
 		$propValue = $dbr->selectField( 'page_props', // table to use
 			'pp_value', // Field to select
-			array( 'pp_page' => $title->getArticleID(), 'pp_propname' => "docbook_" . $this->bookname ), // where conditions
+			array( 'pp_page' => $title->getArticleID(), 'pp_propname' => md5( "docbook_" . $this->bookname ) ), // where conditions
 			__METHOD__
 		);
 

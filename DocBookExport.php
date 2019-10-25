@@ -43,7 +43,7 @@ class DocBookExport {
 		}
 
         $serialized = serialize( $options );
-        $parser->getOutput()->setProperty( 'docbook_' . str_replace( " ", "_", $options['title'] ), $serialized );
+        $parser->getOutput()->setProperty( md5( 'docbook_' . str_replace( " ", "_", $options['title'] ) ), $serialized );
 
 		return Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Get Docbook - " . $options['title'], [], [ 'embed_page' => $parser->getTitle()->getText(), 'bookname' => str_replace( " ", "_", $options['title'] ) ] );
 	}
