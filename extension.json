@@ -13,7 +13,8 @@
 		"SpecialGetDocbook": "SpecialGetDocbook.php"
 	},
 	"config": {
-		"DocbookExportPandocServerPath": ""
+		"DocbookExportPandocServerPath": "",
+		"DocbookDownloadServerPath": ""
 	},
 	"Hooks": {
 		"ParserFirstCallInit": [

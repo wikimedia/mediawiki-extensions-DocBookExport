@@ -502,7 +502,7 @@ class SpecialGetDocbook extends SpecialPage {
 	}
 
 	public function processResponse( $httpcode, $result ) {
-		global $wgDocbookExportPandocServerPath;
+		global $wgDocbookDownloadServerPath;
 
 		$out = $this->getOutput();
 		if ( $result['result'] == 'success' ) {
@@ -511,10 +511,10 @@ class SpecialGetDocbook extends SpecialPage {
 				$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Check Status", [], [ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'check_status' ] );
 				$out->addHTML( "<p>$check_status_link</p>" );
 				if ( $result['status'] == "Docbook generated" ) {
-					$out->addHTML( '<a href="'. $wgDocbookExportPandocServerPath . $result['docbook_zip'] .'">Download XML</a><br>' );
-					$out->addHTML( '<a href="'. $wgDocbookExportPandocServerPath . $result['docbook_html'] .'">Download HTML</a><br>' );
-					$out->addHTML( '<a href="'. $wgDocbookExportPandocServerPath . $result['docbook_pdf'] .'">Download PDF</a><br>' );
-					$out->addHTML( '<a href="'. $wgDocbookExportPandocServerPath . $result['docbook_odf'] .'">Download ODF</a><br>' );
+					$out->addHTML( '<a href="'. $wgDocbookDownloadServerPath . $result['docbook_zip'] .'">Download XML</a><br>' );
+					$out->addHTML( '<a href="'. $wgDocbookDownloadServerPath . $result['docbook_html'] .'">Download HTML</a><br>' );
+					$out->addHTML( '<a href="'. $wgDocbookDownloadServerPath . $result['docbook_pdf'] .'">Download PDF</a><br>' );
+					$out->addHTML( '<a href="'. $wgDocbookDownloadServerPath . $result['docbook_odf'] .'">Download ODF</a><br>' );
 				}
 			} else {
 				$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Check Status", [], [ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'check_status' ] );
