@@ -56,8 +56,14 @@ class SpecialGetDocbook extends SpecialPage {
 			return;
 		}
 
+		$out->addHTML( "<span class='mw-headline'><h3>". str_replace( "_", " ", $this->bookname ) ."</h3></span>" );
+
 		if ( $request->getVal( 'action' ) == "check_status" ) {
 			return $this->getDocbookStatus( $docbook_folder );
+		}
+
+		if ( empty( $request->getVal( 'action' ) ) ) {
+			return $this->getDocbookGenerateButton( $docbook_folder );
 		}
 
 		$book_contents = '<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
@@ -468,6 +474,20 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 		return Status::newGood();
 	}
+
+	public function getDocbookGenerateButton( $docbook_folder ) {
+		$this->setHeaders();
+		$request = $this->getRequest();
+		$out = $this->getOutput();
+
+		$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Check Status", [], [ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'check_status' ] );
+
+		$out->addHTML( "<p>$check_status_link</p>" );
+
+		$create_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Re-generate Docbook", ['id' => "create_docbook"], [ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'create' ] );
+		$out->addHTML( "<p>$create_link (Requires upload to Docbook server. This may take a while)</p>" );
+	}
+
 	public function getDocbookStatus( $docbook_folder ) {
 		global $wgDocbookExportPandocServerPath;
 
@@ -508,7 +528,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( $result['result'] == 'success' ) {
 			if ( !empty( $result['status'] ) ) {
 				$out->addHTML( "<p>Status: ". $result['status'] ."</p>" );
-				$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Check Status", [], [ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'check_status' ] );
+				$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Refresh Status", [], [ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'check_status' ] );
 				$out->addHTML( "<p>$check_status_link</p>" );
 				if ( $result['status'] == "Docbook generated" ) {
 					$out->addHTML( '<a href="'. $wgDocbookDownloadServerPath . $result['docbook_zip'] .'">Download XML</a><br>' );
