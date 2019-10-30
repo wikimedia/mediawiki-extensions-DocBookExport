@@ -655,7 +655,7 @@ class SpecialGetDocbook extends SpecialPage {
 			$node->setAttribute( 'src', basename( $file_url ) );
 		}
 
-		$html = $dom->saveHTML();
+		$html = utf8_decode($dom->saveHTML($dom->documentElement));
 
 		$html = str_replace( "</html>", "", $html );
 		$html = str_replace( "<html>", "", $html );
