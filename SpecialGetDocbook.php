@@ -89,20 +89,43 @@ class SpecialGetDocbook extends SpecialPage {
 
 		$index_categories = array();
 		if ( array_key_exists( 'index term categories', $options ) ) {
-			$index_categories = explode( ",", $options['index term categories'] );
+			$index_categories = self::smartSplit( ",", $options['index term categories'] );
 		}
 
 		foreach( $index_categories as $index_category ) {
 			$parts = explode( '(', $index_category );
 			$category_name = $parts[0];
 			$categoryMembers = Category::newFromName( trim( $category_name ) )->getMembers();
-			foreach( $categoryMembers as $index_title ) {
+
+			$line_props = array();
+			if ( count( $parts ) > 1 ) {
+				$line_props = explode( ')', $parts[1] )[0];
+				$chunks = array_chunk(preg_split('/(=|,)/', $line_props), 2); // See https://stackoverflow.com/a/32768029/1150075
+				$line_props = array_combine(array_column($chunks, 0), array_column($chunks, 1));
+				$a = array_map('trim', array_keys($line_props));
+				$b = array_map('trim', $line_props);
+				$line_props = array_combine($a, $b);
+			}
+			foreach( $categoryMembers as $categoryMember ) {
+				$index_title = $categoryMember;
 				$index_data = [];
+				$grouping_property = '';
 				if ( count( $parts ) > 1 ) {
-					$line_props = explode( ')', $parts[1] )[0];
-					$chunks = array_chunk(preg_split('/(=|,)/', $line_props), 2); // See https://stackoverflow.com/a/32768029/1150075
-					$line_props = array_combine(array_column($chunks, 0), array_column($chunks, 1));
-					$grouping_property = '';
+					if ( array_key_exists( 'property', $line_props ) ) {
+						$page = SMWDIWikiPage::newFromTitle( $categoryMember );
+						$store = \SMW\StoreFactory::getStore();
+						$data = $store->getSemanticData( $page );
+						$property = SMWDIProperty::newFromUserLabel( $line_props['property'] );
+						$values = $data->getPropertyValues( $property );
+						if ( count( $values ) > 0 ) {
+							$value = array_shift( $values );
+							if ( $value->getDIType() == SMWDataItem::TYPE_BLOB ) {
+								$index_title = Title::newFromText( $value->getString() );
+							} else if ( $value->getDIType() == SMWDataItem::TYPE_WIKIPAGE ) {
+								$index_title = $value->getTitle();
+							}
+						}
+					}
 					if ( array_key_exists( 'group_by', $line_props ) ) {
 						$grouping_property = $line_props['group_by'];
 					}
@@ -110,24 +133,27 @@ class SpecialGetDocbook extends SpecialPage {
 						$grouping_property = $line_props['group by'];
 					}
 					if ( !empty( $grouping_property ) ) {
-						$page = SMWDIWikiPage::newFromTitle( $index_title );
+						$page = SMWDIWikiPage::newFromTitle( $categoryMember );
 						$store = \SMW\StoreFactory::getStore();
 						$data = $store->getSemanticData( $page );
 						$property = SMWDIProperty::newFromUserLabel( $grouping_property );
 						$values = $data->getPropertyValues( $property );
 						if ( count( $values ) > 0 ) {
 							$value = array_shift( $values );
-							if ( $value->getDIType() == SMWDataItem::TYPE_STRING ) {
+							if ( $value->getDIType() == SMWDataItem::TYPE_BLOB ) {
 								$index_data = [ 'primary' => $value->getString() ];
 							} else if ( $value->getDIType() == SMWDataItem::TYPE_WIKIPAGE ) {
 								$index_data = [ 'primary' => $value->getTitle()->getText() ];
 							}
+						} else {
+							$grouping_property = '';
 						}
 					}
-				} else {
+				}
+				if ( empty( $grouping_property ) ) {
 					$propValue = $dbr->selectField( 'page_props', // table to use
 						'pp_value', // Field to select
-						array( 'pp_page' => $index_title->getArticleID(), 'pp_propname' => "docbook_index_group_by" ), // where conditions
+						array( 'pp_page' => $categoryMember->getArticleID(), 'pp_propname' => "docbook_index_group_by" ), // where conditions
 						__METHOD__
 					);
 					if ( $propValue !== false ) {
@@ -752,6 +778,64 @@ class SpecialGetDocbook extends SpecialPage {
 			throw new Exception( "Unable to create directory: $uploadDir" );
 		}
 		return $uploadDirFull;
+	}
+
+	static function smartSplit( $delimiter, $string, $includeBlankValues = false ) {
+		if ( $string == '' ) {
+			return array();
+		}
+
+		$ignoreNextChar = false;
+		$returnValues = array();
+		$numOpenParentheses = 0;
+		$curReturnValue = '';
+
+		for ( $i = 0; $i < strlen( $string ); $i++ ) {
+			$curChar = $string{$i};
+
+			if ( $ignoreNextChar ) {
+				// If previous character was a backslash,
+				// ignore the current one, since it's escaped.
+				// What if this one is a backslash too?
+				// Doesn't matter - it's escaped.
+				$ignoreNextChar = false;
+			} elseif ( $curChar == '(' ) {
+				$numOpenParentheses++;
+			} elseif ( $curChar == ')' ) {
+				$numOpenParentheses--;
+			} elseif ( $curChar == '\'' || $curChar == '"' ) {
+				$pos = self::findQuotedStringEnd( $string, $curChar, $i + 1 );
+				if ( $pos === false ) {
+					throw new MWException( "Error: unmatched quote in SQL string constant." );
+				}
+				$curReturnValue .= substr( $string, $i, $pos - $i );
+				$i = $pos;
+			} elseif ( $curChar == '\\' ) {
+				$ignoreNextChar = true;
+			}
+
+			if ( $curChar == $delimiter && $numOpenParentheses == 0 ) {
+				$returnValues[] = trim( $curReturnValue );
+				$curReturnValue = '';
+			} else {
+				$curReturnValue .= $curChar;
+			}
+		}
+		$returnValues[] = trim( $curReturnValue );
+
+		if ( $ignoreNextChar ) {
+			throw new MWException( "Error: incomplete escape sequence." );
+		}
+
+		if ( $includeBlankValues ) {
+			return $returnValues;
+		}
+
+		// Remove empty strings (but not other quasi-empty values, like '0') and re-key the array.
+		$noEmptyStrings = function ( $s ) {
+			return $s !== '';
+		};
+		return array_values( array_filter( $returnValues, $noEmptyStrings ) );
 	}
 }
 
