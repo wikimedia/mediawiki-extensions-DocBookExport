@@ -163,7 +163,6 @@ class SpecialGetDocbook extends SpecialPage {
 				$index_terms[$index_title->getText()] = $index_data;
 			}
 		}
-
 		$index_terms_capitalized = array();
 		foreach( $index_terms as $index_term => $index_data ) {
 			if ( ucfirst( $index_term ) != $index_term ) {
@@ -172,7 +171,7 @@ class SpecialGetDocbook extends SpecialPage {
 				$index_terms_capitalized[lcfirst( $index_term )] = $index_data;
 			}
 		}
-		$index_terms = array_merge( $index_terms, $index_terms_capitalized );
+		$index_terms += $index_terms_capitalized;
 
 		$uploadDir = $this->getUploadDir();
 		rrmdir( "$uploadDir/$docbook_folder" );
