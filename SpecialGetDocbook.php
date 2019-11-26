@@ -294,8 +294,8 @@ class SpecialGetDocbook extends SpecialPage {
 			$all_files[] = "$uploadDir/$docbook_folder/docbookexport.xsl";
 		}
 
-		$xsl_contents = file_get_contents( __DIR__ . '/pagenumberprefixes.xsl' );
-		if ( !file_put_contents( "$uploadDir/$docbook_folder/pagenumberprefixes.xsl", $xsl_contents ) ) {
+		$pagenumberprefixes = file_get_contents( __DIR__ . '/pagenumberprefixes.xsl' );
+		if ( !file_put_contents( "$uploadDir/$docbook_folder/pagenumberprefixes.xsl", $pagenumberprefixes ) ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 				"Failed to create file pagenumberprefixes.xsl"
@@ -304,6 +304,27 @@ class SpecialGetDocbook extends SpecialPage {
 		} else {
 			$all_files[] = "$uploadDir/$docbook_folder/pagenumberprefixes.xsl";
 		}
+
+		$xsltproc_args = "";
+		if ( array_key_exists( 'font', $options ) ) {
+			$xsltproc_args .= " --stringparam  body.font.family " . $options['font'] . " ";
+		}
+		if ( array_key_exists( 'font size', $options ) ) {
+			$xsltproc_args .= " --stringparam  body.font.master " . $options['font size'] . " ";
+		}
+
+		if ( !empty( $xsltproc_args ) ) {
+			if ( !file_put_contents( "$uploadDir/$docbook_folder/xsltproc_args.txt", $xsltproc_args ) ) {
+				$out->wrapWikiMsg(
+					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
+					"Failed to create file xsltproc_args.txt"
+				);
+				return;
+			} else {
+				$all_files[] = "$uploadDir/$docbook_folder/xsltproc_args.txt";
+			}
+		}
+
 		$css_contents = file_get_contents( __DIR__ . '/docbookexport_styles.css' );
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport_styles.css", $css_contents ) ) {
 			$out->wrapWikiMsg(
