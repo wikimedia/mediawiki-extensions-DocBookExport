@@ -592,10 +592,17 @@ class SpecialGetDocbook extends SpecialPage {
 				$result['error']
 			);
 		} else {
-			$out->wrapWikiMsg(
-				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Unknown Error. Response data:" . json_encode( $result ) . " Response Code: " . $httpcode
-			);
+			if ( $httpcode == 200 ) {
+				$out->wrapWikiMsg(
+					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
+					"Docbook was never generated!"
+				);
+			} else {
+				$out->wrapWikiMsg(
+					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
+					"Unknown Error. Response data:" . json_encode( $result ) . " Response Code: " . $httpcode
+				);
+			}
 		}
 	}
 
