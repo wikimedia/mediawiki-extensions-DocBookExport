@@ -7,6 +7,7 @@
 	],
 	"url": "https://www.mediawiki.org/wiki/Extension:DocBookExport",
 	"license-name": "MIT",
+	"descriptionmsg": "docbookexport-desc",
 	"type": "other",
 	"AutoloadClasses": {
 		"DocBookExport": "DocBookExport.php",
@@ -30,7 +31,8 @@
 		]
 	},
 	"ExtensionMessagesFiles": {
-		"DocBookExportMagic": "DocBookExport.i18n.magic.php"
+		"DocBookExportMagic": "DocBookExport.i18n.magic.php",
+		"DocBookExportAlias": "DocBookExport.i18n.alias.php"
 	},
 	"manifest_version": 1
 }

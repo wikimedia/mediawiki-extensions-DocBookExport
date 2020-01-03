@@ -1,5 +1,6 @@
 {
 	"@metadata": {},
+	"docbookexport-desc": "Adds <code><nowiki>{{#docbook:}}</nowiki></code> parser function to create a DocBook from selected wiki pages",
 	"getdocbook": "Get DocBook",
 	"apihelp-getdocbook-summary": "Create a DocBook from a wiki page"
 }
