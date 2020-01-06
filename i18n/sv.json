@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"WikiPhoenix"
+		]
+	},
+	"docbookexport-desc": "Lägger till tolkningsfunktionen <code><nowiki>{{#docbook:}}</nowiki></code> för att skapa en DocBook från valda wikisidor",
+	"getdocbook": "Skaffa DocBook",
+	"apihelp-getdocbook-summary": "Skapa en DocBook från en wikisida"
+}

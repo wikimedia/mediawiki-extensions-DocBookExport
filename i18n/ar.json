@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"ديفيد"
+		]
+	},
+	"docbookexport-desc": "يضيف وظيفة المحلل <code><nowiki>{{#docbook:}}</nowiki></code> لإنشاء DocBook من صفحات ويكي محددة",
+	"getdocbook": "الحصول على DocBook",
+	"apihelp-getdocbook-summary": "إنشاء DocBook من صفحة ويكي"
+}

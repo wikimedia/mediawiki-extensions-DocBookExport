@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"Bjankuloski06"
+		]
+	},
+	"docbookexport-desc": "Додава расчленувачка функција <code><nowiki>{{#docbook:}}</nowiki></code> за создавање на DocBook од избрани викистраници",
+	"getdocbook": "Дај DocBook",
+	"apihelp-getdocbook-summary": "Создај DocBook од викистраница"
+}

@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"Kly"
+		]
+	},
+	"docbookexport-desc": "從所選的 wiki 頁面添加 <code><nowiki>{{#docbook:}}</nowiki></code> 解析功能來建立 DocBook",
+	"getdocbook": "取得 DocBook",
+	"apihelp-getdocbook-summary": "從 wiki 頁面來建立 DocBook"
+}

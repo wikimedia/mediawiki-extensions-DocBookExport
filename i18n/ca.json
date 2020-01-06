@@ -1,0 +1,8 @@
+{
+	"@metadata": {
+		"authors": [
+			"Fitoschido"
+		]
+	},
+	"apihelp-getdocbook-summary": "Crea un fitxer DocBook a partir d’una pàgina del wiki"
+}

@@ -1,5 +1,5 @@
 {
-	"@metadata": {},
+	"@metadata": [],
 	"docbookexport-desc": "{{desc|name=DocBookExport|url=https://www.mediawiki.org/wiki/Extension:DocBookExport}}",
 	"getdocbook": "{{doc-special|Getdocbook}}",
 	"apihelp-getdocbook-summary": "{{doc-apihelp-summary|getdocbook}}"
