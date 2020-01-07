@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"StanProg"
+		]
+	},
+	"docbookexport-desc": "Добавя парсерна функция <code><nowiki>{{#docbook:}}</nowiki></code> за създаване на DocBook от избрани уики страници",
+	"getdocbook": "Вземане на DocBook",
+	"apihelp-getdocbook-summary": "Създаване на DocBook от уики страница"
+}
