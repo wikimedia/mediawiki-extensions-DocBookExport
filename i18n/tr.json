@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"BaRaN6161 TURK"
+		]
+	},
+	"docbookexport-desc": "Seçili wiki sayfalarından bir DocBook oluşturmak için <code><nowiki>{{#docbook:}}</nowiki></code> ayrıştırıcı işlevi ekler",
+	"getdocbook": "DocBook alın",
+	"apihelp-getdocbook-summary": "Viki sayfasından DocBook oluştur"
+}
