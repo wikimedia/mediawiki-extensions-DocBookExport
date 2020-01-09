@@ -1,10 +1,11 @@
 {
 	"@metadata": {
 		"authors": [
-			"Gomoko"
+			"Gomoko",
+			"Pols12"
 		]
 	},
-	"docbookexport-desc": "Ajoute la fonction d’analyseur <code><nowiki>{{#docbook:}}</nowiki></code> pour créer un DocBook depuis les pages wiki sélectionnées",
-	"getdocbook": "Obtenir DocBook",
-	"apihelp-getdocbook-summary": "Créer un DocBook depuis une page wiki"
+	"docbookexport-desc": "Ajoute la fonction d’analyseur <code><nowiki>{{#docbook:}}</nowiki></code> pour créer un DocBook à partir des pages wiki sélectionnées",
+	"getdocbook": "Générer un DocBook",
+	"apihelp-getdocbook-summary": "Créer un DocBook à partir d’une page wiki"
 }
