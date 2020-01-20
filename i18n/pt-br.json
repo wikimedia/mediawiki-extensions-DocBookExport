@@ -4,5 +4,6 @@
 			"Eduardo Addad de Oliveira"
 		]
 	},
-	"getdocbook": "Obter DocBook"
+	"getdocbook": "Obter DocBook",
+	"apihelp-getdocbook-summary": "Criar um DocBook a partir de uma página da wiki"
 }
