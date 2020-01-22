@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"Jon Harald Søby"
+		]
+	},
+	"docbookexport-desc": "Legger til parserfunksjonen <code><nowiki>{{#docbook:}}</nowiki></code> for å opprette en DocBook fra valgte wikisider",
+	"getdocbook": "Hent DocBook",
+	"apihelp-getdocbook-summary": "Opprett en DocBook fra en wikiside"
+}
