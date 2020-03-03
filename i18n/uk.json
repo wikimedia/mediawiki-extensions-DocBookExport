@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"Piramidion"
+		]
+	},
+	"docbookexport-desc": "Додає парсерну функцію <code><nowiki>{{#docbook:}}</nowiki></code> для створенняa DocBook із вибраних вікісторінок",
+	"getdocbook": "Отримати DocBook",
+	"apihelp-getdocbook-summary": "Створити DocBook із вікісторінки"
+}
