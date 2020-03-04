@@ -188,7 +188,7 @@ class SpecialGetDocbook extends SpecialPage {
 			$all_files[] = "$uploadDir/$docbook_folder/index_terms.json";
 		}
 
-		$popts = new ParserOptions();
+		$popts = new ParserOptions( $this->getUser() );
 		$popts->enableLimitReport( false );
 		$popts->setIsPreview( false );
 		$popts->setIsSectionPreview( false );
