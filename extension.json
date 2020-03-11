@@ -18,9 +18,7 @@
 		"DocbookDownloadServerPath": ""
 	},
 	"Hooks": {
-		"ParserFirstCallInit": [
-			"DocBookExport::onParserSetup"
-		]
+		"ParserFirstCallInit": "DocBookExport::onParserSetup"
 	},
 	"SpecialPages": {
 		"GetDocbook": "SpecialGetDocbook"
