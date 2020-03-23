@@ -819,7 +819,7 @@ class SpecialGetDocbook extends SpecialPage {
 		$curReturnValue = '';
 
 		for ( $i = 0; $i < strlen( $string ); $i++ ) {
-			$curChar = $string{$i};
+			$curChar = $string[$i];
 
 			if ( $ignoreNextChar ) {
 				// If previous character was a backslash,
