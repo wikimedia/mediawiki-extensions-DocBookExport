@@ -690,21 +690,27 @@ class SpecialGetDocbook extends SpecialPage {
 			}
 		}
 
+		if ( method_exists( MediaWikiServices::class, 'getRepoGroup' ) ) {
+			// MediaWiki 1.34+
+			$repoGroup = MediaWikiServices::getInstance()->getRepoGroup();
+		} else {
+			$repoGroup = RepoGroup::singleton();
+		}
 		foreach( $dom->getElementsByTagName( 'img' ) as $node ) {
 			$file_url = $node->getAttribute( 'src' );
 			$error = false;
-			if ( wfFindFile( basename( $file_url ) ) ) {
-				$file_path = wfFindFile( basename( $file_url ) )->getLocalRefPath();
+			if ( $repoGroup->findFile( basename( $file_url ) ) ) {
+				$file_path = $repoGroup->findFile( basename( $file_url ) )->getLocalRefPath();
 			} else {
 				if ( strpos( $file_url, "thumb" ) !== FALSE ) {
 					$parts = explode( "px-", basename( $file_url ) );
 					$width = array_shift( $parts );
 					$file_name = array_shift( $parts );
-					$file = wfFindFile( $file_name );
+					$file = $repoGroup->findFile( $file_name );
 					if ( !$file ) {
 						if ( substr_count( $file_name, "." ) > 1 ) { // In case of filename.svg files the thumbnail file can be filename.svg.png
 							$file_name = substr( $file_name, 0, strrpos( $file_name, '.' ) );
-							$file = wfFindFile( $file_name );
+							$file = $repoGroup->findFile( $file_name );
 						}
 					}
 					if ( $file ) {
