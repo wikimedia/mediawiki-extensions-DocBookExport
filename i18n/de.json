@@ -1,0 +1,9 @@
+{
+	"@metadata": {
+		"authors": [
+			"Ameisenigel"
+		]
+	},
+	"getdocbook": "DocBook generieren",
+	"apihelp-getdocbook-summary": "DocBook aus einer Wikiseite erstellen"
+}
