@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"Diman Russkov"
+		]
+	},
+	"docbookexport-desc": "Добавляет функцию парсера <code><nowiki>{{#docbook:}}</nowiki></code> для создания DocBook из выбранных вики-страниц.",
+	"getdocbook": "Получить DocBook",
+	"apihelp-getdocbook-summary": "Создать DocBook из вики-страницы"
+}
