@@ -768,7 +768,7 @@ class SpecialGetDocbook extends SpecialPage {
 			$pos += 4;
 			$offset = strpos( $page_html, "</$section_header>", $pos );
 			$title_html = substr( $page_html, $pos, $offset - $pos );
-			$title_html = str_replace( 'id="', 'id="' . str_replace( " ", "_", $wikipage ) . '_', $title_html );
+			$title_html = str_replace( 'id="', 'id="' . uniqid() . '_' . str_replace( " ", "_", $wikipage ) . '_', $title_html );
 			$new_page_html .= '<section><title><html_pandoc>' . $title_html . '</html_pandoc></title>';
 			$offset += 5;
 			$open_section = true;
