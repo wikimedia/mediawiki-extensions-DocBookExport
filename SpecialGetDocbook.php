@@ -671,7 +671,7 @@ class SpecialGetDocbook extends SpecialPage {
 
 		// Handle SMW Bug https://github.com/SemanticMediaWiki/SemanticMediaWiki/issues/4232
 		foreach( $dom->getElementsByTagName( 'table' ) as $table ) {
-			if ( $table->getElementsByTagName( 'th' )->item(0)->parentNode->nodeName != 'tr' ) {
+			if ( $table->getElementsByTagName( 'th' )->length > 0 && $table->getElementsByTagName( 'th' )->item(0)->parentNode->nodeName != 'tr' ) {
 				$table->getElementsByTagName( 'th' )->item(0)->parentNode->insertBefore( $dom->createElement( "tr" ), $table->getElementsByTagName( 'th' )->item(0) );
 				$th_nodes = [];
 				while ($th_node = $table->getElementsByTagName( "th" )->item(0) ) {
