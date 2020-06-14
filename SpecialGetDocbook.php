@@ -66,7 +66,7 @@ class SpecialGetDocbook extends SpecialPage {
 			return $this->getDocbookGenerateButton( $docbook_folder );
 		}
 
-		$book_contents = '<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+		$book_contents = '<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 		<book xmlns:xlink="http://www.w3.org/1999/xlink">';
 
 		$all_files = array();
@@ -197,6 +197,10 @@ class SpecialGetDocbook extends SpecialPage {
 
 		$book_contents .= '<info><title>' . $options['title'] . '</title>';
 
+		if ( !empty( $options['subtitle'] ) ) {
+			$book_contents .= '<subtitle>' . $options['subtitle'] . '</title>';
+		}
+
 		if ( array_key_exists( 'cover page', $options ) ) {
 
 			$titleObj = Title::newFromText( $options['cover page'] );
@@ -248,6 +252,19 @@ class SpecialGetDocbook extends SpecialPage {
 		} else {
 			$xsl_contents = str_replace( 'FOOTERPLACEHOLDER', "", $xsl_contents );
 		}
+
+		if ( array_key_exists( 'section_autolabel_max_depth', $options ) ) {
+			$xsl_contents = str_replace( 'SECTION_AUTOLABEL_MAX_DEPTH_PLACEHOLDER', $options['section_autolabel_max_depth'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'SECTION_AUTOLABEL_MAX_DEPTH_PLACEHOLDER', "8", $xsl_contents );
+		}
+
+		if ( array_key_exists( 'external_link_color', $options ) ) {
+			$xsl_contents = str_replace( 'EXTERNAL_LINK_COLOR', $options['external_link_color'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'EXTERNAL_LINK_COLOR', "blue", $xsl_contents );
+		}
+
 		if ( array_key_exists( 'orientation', $options ) ) {
 			$xsl_contents = str_replace( 'ORIENTATIONPLACEHOLDER', $options['orientation'], $xsl_contents );
 		} else {
