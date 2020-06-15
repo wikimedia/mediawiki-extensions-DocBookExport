@@ -4,6 +4,7 @@
 			"Eduardo Addad de Oliveira"
 		]
 	},
+	"docbookexport-desc": "Adiciona a função <code><nowiki>{{#docbook:}}</nowiki></code> para analisador para criar um livro de documento a partir de páginas da wiki selecionadas",
 	"getdocbook": "Obter DocBook",
 	"apihelp-getdocbook-summary": "Criar um DocBook a partir de uma página da wiki"
 }
