@@ -41,7 +41,6 @@ class DocBookExport {
 		if ( $parser->getTitle() == null ) {
 			return "";
 		}
-
         $serialized = serialize( $options );
         $parser->getOutput()->setProperty( md5( 'docbook_' . str_replace( " ", "_", $options['title'] ) ), $serialized );
 
