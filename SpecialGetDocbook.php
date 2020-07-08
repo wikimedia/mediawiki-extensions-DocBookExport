@@ -367,6 +367,29 @@ class SpecialGetDocbook extends SpecialPage {
 			$identifier = $parts[0];
 			$after_identifier = $parts[1];
 
+			$parts = explode( '(', $after_identifier );
+			$wiki_pages = explode( ',', $parts[0] );
+			$display_pagename = $wiki_pages[0];
+			$orientation_mode = "";
+
+			if ( count( $parts ) == 2 ) {
+				$line_props = explode( ')', $parts[1] )[0];
+				$chunks = array_chunk(preg_split('/(=|,)/', $line_props), 2); // See https://stackoverflow.com/a/32768029/1150075
+				$line_props = array_combine(array_column($chunks, 0), array_column($chunks, 1));
+				if ( array_key_exists( 'title', $line_props ) ) {
+					$display_pagename = $line_props['title'];
+				}
+				if ( array_key_exists( 'header', $line_props ) ) {
+					$custom_header = ' header="' . $line_props['header']. '"';
+				}
+				if ( array_key_exists( 'orientation', $line_props ) && $line_props['orientation'] == "landscape" ) {
+					$orientation_mode = ' role="landscape"';
+				}
+				if ( array_key_exists( 'orientation', $line_props ) && $line_props['orientation'] == "portrait" ) {
+					$orientation_mode = ' role="portrait"';
+				}
+			}
+
 			if ( $identifier == '*' ) {
 			$content_started = true;
 				$this_level = $deep_level;
@@ -377,7 +400,7 @@ class SpecialGetDocbook extends SpecialPage {
 					}
 					$this_level--;
 				}
-				$book_contents .= '<chapter>';
+				$book_contents .= '<chapter'. $orientation_mode .'>';
 				if ( !array_key_exists( 0, $close_tags ) ) {
 					$close_tags[0] = '';
 				}
@@ -393,7 +416,7 @@ class SpecialGetDocbook extends SpecialPage {
 					}
 					$this_level--;
 				}
-				$book_contents .= '<section>';
+				$book_contents .= '<section'. $orientation_mode .'>';
 				if ( !array_key_exists( $indent_level, $close_tags ) ) {
 					$close_tags[$indent_level] = '';
 				}
@@ -408,9 +431,9 @@ class SpecialGetDocbook extends SpecialPage {
 					$this_level--;
 				}
 				if ( !$content_started ) {
-					$book_contents .= '<preface>';
+					$book_contents .= '<preface'. $orientation_mode .'>';
 				} else {
-					$book_contents .= '<appendix>';
+					$book_contents .= '<appendix'. $orientation_mode .'>';
 				}
 				if ( !array_key_exists( 0, $close_tags ) ) {
 					$close_tags[0] = '';
@@ -422,22 +445,6 @@ class SpecialGetDocbook extends SpecialPage {
 				}
 			} else {
 				$this->getResult()->addValue( 'result', 'failed', "Unsupported identifier: $identifier used in page structure" );
-			}
-
-			$parts = explode( '(', $after_identifier );
-			$wiki_pages = explode( ',', $parts[0] );
-			$display_pagename = $wiki_pages[0];
-
-			if ( count( $parts ) == 2 ) {
-				$line_props = explode( ')', $parts[1] )[0];
-				$chunks = array_chunk(preg_split('/(=|,)/', $line_props), 2); // See https://stackoverflow.com/a/32768029/1150075
-				$line_props = array_combine(array_column($chunks, 0), array_column($chunks, 1));
-				if ( array_key_exists( 'title', $line_props ) ) {
-					$display_pagename = $line_props['title'];
-				}
-				if ( array_key_exists( 'header', $line_props ) ) {
-					$custom_header = ' header="' . $line_props['header']. '"';
-				}
 			}
 
 			$book_contents .= "<title$custom_header>$display_pagename</title>";

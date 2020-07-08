@@ -89,4 +89,194 @@
 		</xsl:choose>
 	</xsl:attribute>
 </xsl:attribute-set>
+
+
+<xsl:template name="user.pagemasters">
+  <!-- landscape body pages -->
+      <fo:simple-page-master master-name="landscape-first"
+                           page-width="{$page.width}"
+                           page-height="{$page.height}"
+                           margin-top="{$page.margin.top}"
+                           margin-bottom="{$page.margin.bottom}">
+      <xsl:attribute name="margin-{$direction.align.start}">
+        <xsl:value-of select="$page.margin.inner"/>
+	<xsl:if test="$fop.extensions != 0">
+	  <xsl:value-of select="concat(' - (',$title.margin.left,')')"/>
+        </xsl:if>
+	<xsl:if test="$fop.extensions != 0">
+	  <xsl:value-of select="concat(' - (',$title.margin.left,')')"/>
+        </xsl:if>
+      </xsl:attribute>
+      <xsl:attribute name="margin-{$direction.align.end}">
+        <xsl:value-of select="$page.margin.outer"/>
+      </xsl:attribute>
+      <xsl:if test="$axf.extensions != 0">
+        <xsl:call-template name="axf-page-master-properties">
+          <xsl:with-param name="page.master">body-first</xsl:with-param>
+        </xsl:call-template>
+      </xsl:if>
+      <fo:region-body margin-bottom="{$body.margin.bottom}"
+                      margin-top="{$body.margin.top}"
+					  reference-orientation="90"
+                      column-gap="{$column.gap.body}"
+                      column-count="{$column.count.body}">
+        <xsl:attribute name="margin-{$direction.align.start}">
+          <xsl:value-of select="$body.margin.inner"/>
+        </xsl:attribute>
+        <xsl:attribute name="margin-{$direction.align.end}">
+          <xsl:value-of select="$body.margin.outer"/>
+        </xsl:attribute>
+      </fo:region-body>
+      <fo:region-before region-name="xsl-region-before-first"
+                        extent="{$region.before.extent}"
+                        precedence="{$region.before.precedence}"
+                        display-align="before"/>
+      <fo:region-after region-name="xsl-region-after-first"
+                       extent="{$region.after.extent}"
+                        precedence="{$region.after.precedence}"
+                       display-align="after"/>
+      <xsl:call-template name="region.inner">
+        <xsl:with-param name="sequence">first</xsl:with-param>
+        <xsl:with-param name="pageclass">body</xsl:with-param>
+      </xsl:call-template>
+      <xsl:call-template name="region.outer">
+        <xsl:with-param name="sequence">first</xsl:with-param>
+        <xsl:with-param name="pageclass">body</xsl:with-param>
+      </xsl:call-template>
+    </fo:simple-page-master>
+
+    <fo:simple-page-master master-name="landscape-odd"
+                           page-width="{$page.width}"
+                           page-height="{$page.height}"
+						   reference-orientation="90"
+                           margin-top="{$page.margin.top}"
+                           margin-bottom="{$page.margin.bottom}">
+      <xsl:attribute name="margin-{$direction.align.start}">
+        <xsl:value-of select="$page.margin.inner"/>
+	<xsl:if test="$fop.extensions != 0">
+	  <xsl:value-of select="concat(' - (',$title.margin.left,')')"/>
+        </xsl:if>
+      </xsl:attribute>
+      <xsl:attribute name="margin-{$direction.align.end}">
+        <xsl:value-of select="$page.margin.outer"/>
+      </xsl:attribute>
+      <xsl:if test="$axf.extensions != 0">
+        <xsl:call-template name="axf-page-master-properties">
+          <xsl:with-param name="page.master">body-odd</xsl:with-param>
+        </xsl:call-template>
+      </xsl:if>
+      <fo:region-body margin-bottom="{$body.margin.bottom}"
+                      margin-top="{$body.margin.top}"
+                      column-gap="{$column.gap.body}"
+                      column-count="{$column.count.body}">
+        <xsl:attribute name="margin-{$direction.align.start}">
+          <xsl:value-of select="$body.margin.inner"/>
+        </xsl:attribute>
+        <xsl:attribute name="margin-{$direction.align.end}">
+          <xsl:value-of select="$body.margin.outer"/>
+        </xsl:attribute>
+      </fo:region-body>
+      <fo:region-before region-name="xsl-region-before-odd"
+                        extent="{$region.before.extent}"
+                        precedence="{$region.before.precedence}"
+                        display-align="before"/>
+      <fo:region-after region-name="xsl-region-after-odd"
+                       extent="{$region.after.extent}"
+                       precedence="{$region.after.precedence}"
+                       display-align="after"/>
+      <xsl:call-template name="region.inner">
+        <xsl:with-param name="pageclass">body</xsl:with-param>
+        <xsl:with-param name="sequence">odd</xsl:with-param>
+      </xsl:call-template>
+      <xsl:call-template name="region.outer">
+        <xsl:with-param name="pageclass">body</xsl:with-param>
+        <xsl:with-param name="sequence">odd</xsl:with-param>
+      </xsl:call-template>
+    </fo:simple-page-master>
+
+    <fo:simple-page-master master-name="landscape-even"
+                           page-width="{$page.width}"
+                           page-height="{$page.height}"
+                           margin-top="{$page.margin.top}"
+                           margin-bottom="{$page.margin.bottom}">
+      <xsl:attribute name="margin-{$direction.align.start}">
+        <xsl:value-of select="$page.margin.outer"/>
+	<xsl:if test="$fop.extensions != 0">
+	  <xsl:value-of select="concat(' - (',$title.margin.left,')')"/>
+        </xsl:if>
+      </xsl:attribute>
+      <xsl:attribute name="margin-{$direction.align.end}">
+        <xsl:value-of select="$page.margin.inner"/>
+      </xsl:attribute>
+      <xsl:if test="$axf.extensions != 0">
+        <xsl:call-template name="axf-page-master-properties">
+          <xsl:with-param name="page.master">body-even</xsl:with-param>
+        </xsl:call-template>
+      </xsl:if>
+      <fo:region-body margin-bottom="{$body.margin.bottom}"
+                      margin-top="{$body.margin.top}"
+					  reference-orientation="90"
+                      column-gap="{$column.gap.body}"
+                      column-count="{$column.count.body}">
+        <xsl:attribute name="margin-{$direction.align.start}">
+          <xsl:value-of select="$body.margin.outer"/>
+        </xsl:attribute>
+        <xsl:attribute name="margin-{$direction.align.end}">
+          <xsl:value-of select="$body.margin.inner"/>
+        </xsl:attribute>
+      </fo:region-body>
+      <fo:region-before region-name="xsl-region-before-even"
+                        extent="{$region.before.extent}"
+                        precedence="{$region.before.precedence}"
+                        display-align="before"/>
+      <fo:region-after region-name="xsl-region-after-even"
+                       extent="{$region.after.extent}"
+                       precedence="{$region.after.precedence}"
+                       display-align="after"/>
+      <xsl:call-template name="region.outer">
+        <xsl:with-param name="pageclass">body</xsl:with-param>
+        <xsl:with-param name="sequence">even</xsl:with-param>
+      </xsl:call-template>
+      <xsl:call-template name="region.inner">
+        <xsl:with-param name="pageclass">body</xsl:with-param>
+        <xsl:with-param name="sequence">even</xsl:with-param>
+      </xsl:call-template>
+    </fo:simple-page-master>
+
+
+    <fo:page-sequence-master master-name="landscape">
+      <fo:repeatable-page-master-alternatives>
+        <fo:conditional-page-master-reference master-reference="blank"
+                                              blank-or-not-blank="blank"/>
+        <fo:conditional-page-master-reference master-reference="landscape-first"
+                                              page-position="first"/>
+        <fo:conditional-page-master-reference master-reference="landscape-odd"
+                                              odd-or-even="odd"/>
+        <fo:conditional-page-master-reference
+                                              odd-or-even="even">
+          <xsl:attribute name="master-reference">
+            <xsl:choose>
+              <xsl:when test="$double.sided != 0">landscape-even</xsl:when>
+              <xsl:otherwise>landscape-odd</xsl:otherwise>
+            </xsl:choose>
+          </xsl:attribute>
+        </fo:conditional-page-master-reference>
+      </fo:repeatable-page-master-alternatives>
+    </fo:page-sequence-master>
+</xsl:template>
+
+<xsl:template name="select.user.pagemaster">
+  <xsl:param name="element"/>
+  <xsl:param name="pageclass"/>
+  <xsl:param name="default-pagemaster"/>
+
+  <xsl:choose>
+    <xsl:when test="@role = 'landscape'">landscape</xsl:when>
+    <xsl:when test="@role = 'portrait'">portrait</xsl:when>
+    <xsl:otherwise>
+      <xsl:value-of select="$default-pagemaster"/>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+
 </xsl:stylesheet>
