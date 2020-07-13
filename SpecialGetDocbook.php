@@ -188,6 +188,19 @@ class SpecialGetDocbook extends SpecialPage {
 			$all_files[] = "$uploadDir/$docbook_folder/index_terms.json";
 		}
 
+		if ( array_key_exists( 'xsl_import', $options ) ) {
+			if ( method_exists( MediaWikiServices::class, 'getRepoGroup' ) ) {
+				// MediaWiki 1.34+
+				$repoGroup = MediaWikiServices::getInstance()->getRepoGroup();
+			} else {
+				$repoGroup = RepoGroup::singleton();
+			}
+			if ( $repoGroup->findFile( basename( $options['xsl_import'] ) ) ) {
+				$file_path = $repoGroup->findFile( basename( $options['xsl_import'] ) )->getLocalRefPath();
+				$all_files[] = $file_path;
+			}
+		}
+
 		$popts = new ParserOptions( $this->getUser() );
 		$popts->enableLimitReport( false );
 		$popts->setIsPreview( false );
@@ -242,6 +255,9 @@ class SpecialGetDocbook extends SpecialPage {
 		$book_contents .= '</info>';
 
 		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template.xsl' );
+		if ( array_key_exists( 'xsl_import_path', $options ) ) {
+			$xsl_contents = str_replace( 'DOCBOOKXSLPLACEHOLDER', $options['xsl_import_path'], $xsl_contents );
+		}
 		if ( array_key_exists( 'header', $options ) ) {
 			$xsl_contents = str_replace( 'HEADERPLACEHOLDER', $options['header'], $xsl_contents );
 		} else {
