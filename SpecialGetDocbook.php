@@ -111,7 +111,7 @@ class SpecialGetDocbook extends SpecialPage {
 				$index_data = [];
 				$grouping_property = '';
 				if ( count( $parts ) > 1 ) {
-					if ( array_key_exists( 'property', $line_props ) ) {
+					if ( array_key_exists( 'property', $line_props ) && class_exists( 'SMWDIWikiPage' ) ) {
 						$page = SMWDIWikiPage::newFromTitle( $categoryMember );
 						$store = \SMW\StoreFactory::getStore();
 						$data = $store->getSemanticData( $page );
@@ -132,7 +132,7 @@ class SpecialGetDocbook extends SpecialPage {
 					if ( array_key_exists( 'group by', $line_props ) ) {
 						$grouping_property = $line_props['group by'];
 					}
-					if ( !empty( $grouping_property ) ) {
+					if ( !empty( $grouping_property ) && class_exists( 'SMWDIWikiPage' ) ) {
 						$page = SMWDIWikiPage::newFromTitle( $categoryMember );
 						$store = \SMW\StoreFactory::getStore();
 						$data = $store->getSemanticData( $page );
@@ -208,51 +208,64 @@ class SpecialGetDocbook extends SpecialPage {
 		$popts->setEditSection( false );
 		$popts->setTidy( true );
 
-		$book_contents .= '<info><title>' . $options['title'] . '</title>';
-
+		$book_contents .= '<bookinfo><title>' . $options['title'] . '</title>';
+		if ( !empty( $options['titleabbrev'] ) ) {
+			$book_contents .= '<titleabbrev>' . $options['titleabbrev'] . '</titleabbrev>';
+		}
 		if ( !empty( $options['subtitle'] ) ) {
-			$book_contents .= '<subtitle>' . $options['subtitle'] . '</title>';
+			$book_contents .= '<subtitle>' . $options['subtitle'] . '</subtitle>';
 		}
-
-		if ( array_key_exists( 'cover page', $options ) ) {
-
-			$titleObj = Title::newFromText( $options['cover page'] );
-			if ( $titleObj == null || !$titleObj->exists() ) {
-				$out->wrapWikiMsg(
-					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-					"Could not find page: " . $options['cover page']
-				);
-				return;
-			}
-			$cover_html = $this->getHTMLFromWikiPage( $options['cover page'], $all_files, $popts );
-			if ( $options['timestamp'] == '1' ) {
-				$cover_html .= '<div style="margin-top:10px;clear:both;text-align: right;">Produced from '. $wgServer .' on '. date("Y-m-d H:i:s") .'</div>';
-			}
-			$book_contents .= '<cover>' . $cover_html . '</cover>';
-
-			$orientation = 'portrait';
-			$size = 'LETTER';
-			if ( array_key_exists( 'orientation', $options ) ) {
-				$orientation = $options['orientation'];
-			}
-			if ( array_key_exists( 'size', $options ) ) {
-				$size = $options['size'];
-			}
-
-			if ( !class_exists( '\Mpdf\Mpdf' ) ) {
-				$out->wrapWikiMsg(
-					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-					"Mpdf missing. Install using composer: composer require mpdf/mpdf"
-				);
-				return;
-			}
-			$mpdf = new \Mpdf\Mpdf( ['format' => $size, 'orientation' => $orientation] );
-			$mpdf->WriteHTML( $cover_html );
-			$mpdf->Output( "$uploadDir/$docbook_folder/cover.pdf", 'F' );
-			$all_files[] = "$uploadDir/$docbook_folder/cover.pdf";
+		if ( !empty( $options['corpauthor'] ) ) {
+			$book_contents .= '<corpauthor>' . $options['corpauthor'] . '</corpauthor>';
 		}
-
-		$book_contents .= '</info>';
+		if ( !empty( $options['productname'] ) ) {
+			list( $param_content, $parameters ) = self::extractParametersInBrackets( $options['productname'] );
+			if ( array_key_exists( 'class', $parameters ) ) {
+				$book_contents .= '<productname class="'. $parameters['class'] .'">' . $param_content . '</productname>';
+			} else {
+				$book_contents .= '<productname>' . $param_content . '</productname>';
+			}
+		}
+		if ( !empty( $options['biblioid'] ) ) {
+			list( $param_content, $parameters ) = self::extractParametersInBrackets( $options['biblioid'] );
+			if ( array_key_exists( 'class', $parameters ) ) {
+				$book_contents .= '<biblioid class="'. $parameters['class'] .'">' . $param_content . '</biblioid>';
+			} else {
+				$book_contents .= '<biblioid>' . $param_content . '</biblioid>';
+			}
+		}
+		if ( !empty( $options['volumenum'] ) ) {
+			$book_contents .= '<volumenum>' . $options['volumenum'] . '</volumenum>';
+		}
+		if ( !empty( $options['revhistory'] ) ) {
+			$book_contents .= '<revhistory>';
+			$history_info_parts = explode( ',', $options['revhistory'] );
+			foreach( $history_info_parts as $key => $history_info_part ) {
+				if ( $key%2 == 0 ) {
+					$book_contents .= '<revision><revnumber>' . $history_info_part . '</revnumber>';
+				} else {
+					$book_contents .= '<date>' . $history_info_part . '</date></revision>';
+				}
+			}
+			$book_contents .= '</revhistory>';
+		}
+		if ( !empty( $options['keywordset'] ) ) {
+			$book_contents .= '<keywordset>';
+			$keywordset_keywords = explode( ',', $options['keywordset'] );
+			foreach( $keywordset_keywords as $key => $keywordset_keyword ) {
+				$book_contents .= '<keyword>' . $keywordset_keyword . '</keyword>';
+			}
+			$book_contents .= '</keywordset>';
+		}
+		if ( !empty( $options['subjectset'] ) ) {
+			$book_contents .= '<subjectset>';
+			$keywordset_keywords = explode( ',', $options['subjectset'] );
+			foreach( $keywordset_keywords as $key => $keywordset_keyword ) {
+				$book_contents .= '<subject><subjectterm>' . $keywordset_keyword . '</subjectterm></subject>';
+			}
+			$book_contents .= '</subjectset>';
+		}
+		$book_contents .= '</bookinfo>';
 
 		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template.xsl' );
 		if ( array_key_exists( 'xsl_import_path', $options ) ) {
@@ -383,25 +396,22 @@ class SpecialGetDocbook extends SpecialPage {
 			$identifier = $parts[0];
 			$after_identifier = $parts[1];
 
-			$parts = explode( '(', $after_identifier );
-			$wiki_pages = explode( ',', $parts[0] );
+			list( $param_content, $parameters ) = self::extractParametersInBrackets( $after_identifier );
+			$wiki_pages = explode( ',', $param_content );
 			$display_pagename = $wiki_pages[0];
 			$orientation_mode = "";
 
-			if ( count( $parts ) == 2 ) {
-				$line_props = explode( ')', $parts[1] )[0];
-				$chunks = array_chunk(preg_split('/(=|,)/', $line_props), 2); // See https://stackoverflow.com/a/32768029/1150075
-				$line_props = array_combine(array_column($chunks, 0), array_column($chunks, 1));
-				if ( array_key_exists( 'title', $line_props ) ) {
-					$display_pagename = $line_props['title'];
+			if ( !empty( $parameters ) ) {
+				if ( array_key_exists( 'title', $parameters ) ) {
+					$display_pagename = $parameters['title'];
 				}
-				if ( array_key_exists( 'header', $line_props ) ) {
-					$custom_header = ' header="' . $line_props['header']. '"';
+				if ( array_key_exists( 'header', $parameters ) ) {
+					$custom_header = ' header="' . $parameters['header']. '"';
 				}
-				if ( array_key_exists( 'orientation', $line_props ) && $line_props['orientation'] == "landscape" ) {
+				if ( array_key_exists( 'orientation', $parameters ) && $parameters['orientation'] == "landscape" ) {
 					$orientation_mode = ' role="landscape"';
 				}
-				if ( array_key_exists( 'orientation', $line_props ) && $line_props['orientation'] == "portrait" ) {
+				if ( array_key_exists( 'orientation', $parameters ) && $parameters['orientation'] == "portrait" ) {
 					$orientation_mode = ' role="portrait"';
 				}
 			}
@@ -911,6 +921,17 @@ class SpecialGetDocbook extends SpecialPage {
 		};
 		return array_values( array_filter( $returnValues, $noEmptyStrings ) );
 	}
+
+	public static function extractParametersInBrackets( $string ) {
+		if ( count( explode( '(', $string ) ) != 2 ) {
+			return [$string, []];
+		}
+		$parts = explode( '(', $string );
+		$line_props = explode( ')', $parts[1] )[0];
+		$chunks = array_chunk(preg_split('/(=|,)/', $line_props), 2); // See https://stackoverflow.com/a/32768029/1150075
+		$line_props = array_combine(array_column($chunks, 0), array_column($chunks, 1));
+		return [ $parts[0], $line_props ];
+	}
 }
 
 function makeProperHtml( $improperHtml ) {
@@ -933,7 +954,7 @@ function rrmdir($dir) {
        } 
      }
      rmdir($dir);
-   } 
+   }
 }
 
 function cleanse($string, $allowedTags = array()) {
