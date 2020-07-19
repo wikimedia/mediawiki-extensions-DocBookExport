@@ -26,38 +26,105 @@
 
     <fo:block>
 		<xsl:choose>
-			<xsl:when test="$sequence != 'blank' and $pageclass = 'body'">
+			<xsl:when test="$pageclass = 'body'">
 				<xsl:choose>
-					<xsl:when test="$position = 'center'">
+					<xsl:when test="$sequence = 'blank' and $position = 'center'">
+						<xsl:text>This page intentionally left blank</xsl:text>
+					</xsl:when>
+					<xsl:when test="$sequence != 'blank'">
 						<xsl:choose>
-							<xsl:when test="./section/title/@header">
-								<xsl:value-of select="./section/title/@header"/>
-							</xsl:when>
-							<xsl:otherwise>
+							<xsl:when test="$position = 'center'">
 								<xsl:choose>
-									<xsl:when test="title/@header">
-										<xsl:value-of select="title/@header"/>
+									<xsl:when test="./section/title/@header">
+										<xsl:value-of select="./section/title/@header"/>
+									</xsl:when>
+									<xsl:when test="./chapter/title/@header">
+										<xsl:value-of select="./chapter/title/@header"/>
 									</xsl:when>
 									<xsl:otherwise>
-										HEADERPLACEHOLDER
+										<xsl:choose>
+											<xsl:when test="title/@header">
+												<xsl:value-of select="title/@header"/>
+											</xsl:when>
+											<xsl:otherwise>
+												HEADERPLACEHOLDER
+											</xsl:otherwise>
+										</xsl:choose>
 									</xsl:otherwise>
 								</xsl:choose>
-							</xsl:otherwise>
+							</xsl:when>
+						</xsl:choose>
+					</xsl:when>
+					<xsl:when test="$sequence = 'odd' or $sequence = 'first'">
+						<xsl:choose>
+							<xsl:when test="$position = 'right'">
+								<xsl:choose>
+									<xsl:when test="./section/title/@header_right">
+										<xsl:value-of select="./section/title/@header_right"/>
+									</xsl:when>
+									<xsl:when test="./chapter/title/@header_right">
+										<xsl:value-of select="./chapter/title/@header_right"/>
+									</xsl:when>
+									<xsl:otherwise>
+										HEADERRIGHTPLACEHOLDER
+									</xsl:otherwise>
+								</xsl:choose>
+							</xsl:when>
+							<xsl:when test="$position = 'left'">
+								<xsl:choose>
+									<xsl:when test="./section/title/@header_left">
+										<xsl:value-of select="./section/title/@header_left"/>
+									</xsl:when>
+									<xsl:when test="./chapter/title/@header_left">
+										<xsl:value-of select="./chapter/title/@header_left"/>
+									</xsl:when>
+									<xsl:otherwise>
+										HEADERLEFTPLACEHOLDER
+									</xsl:otherwise>
+								</xsl:choose>
+							</xsl:when>
+						</xsl:choose>
+					</xsl:when>
+					<xsl:when test="$sequence = 'even' or $sequence = 'blank'">
+						<xsl:choose>
+							<xsl:when test="$position = 'left'">
+								<xsl:choose>
+									<xsl:when test="./section/title/@header_right">
+										<xsl:value-of select="./section/title/@header_right"/>
+									</xsl:when>
+									<xsl:when test="./chapter/title/@header_right">
+										<xsl:value-of select="./chapter/title/@header_right"/>
+									</xsl:when>
+									<xsl:otherwise>
+										HEADERRIGHTPLACEHOLDER
+									</xsl:otherwise>
+								</xsl:choose>
+							</xsl:when>
+							<xsl:when test="$position = 'right'">
+								<xsl:choose>
+									<xsl:when test="./section/title/@header_left">
+										<xsl:value-of select="./section/title/@header_left"/>
+									</xsl:when>
+									<xsl:when test="./chapter/title/@header_left">
+										<xsl:value-of select="./chapter/title/@header_left"/>
+									</xsl:when>
+									<xsl:otherwise>
+										HEADERLEFTPLACEHOLDER
+									</xsl:otherwise>
+								</xsl:choose>
+							</xsl:when>
 						</xsl:choose>
 					</xsl:when>
 				</xsl:choose>
-			</xsl:when>
-
-			<xsl:when test="$sequence = 'blank' and $position = 'center'">
-				<xsl:text>This page intentionally left blank</xsl:text>
 			</xsl:when>
 	  </xsl:choose>
 	</fo:block>
 </xsl:template>
 
 <xsl:template name="footer.content">
-	<xsl:param name="pageclass"/>
+	<xsl:param name="pageclass" select="''"/>
 	<xsl:param name="position" select="''"/>
+	<xsl:param name="sequence" select="''"/>
         <fo:block>
 			<xsl:choose>
 				<xsl:when test="$pageclass = 'body'">
@@ -65,8 +132,78 @@
                         <xsl:when test="$position = 'center'">
 							<xsl:apply-templates mode="page-number-prefix" select="."/>
 							<fo:page-number/>
-							<fo:block>FOOTERPLACEHOLDER</fo:block>
+							<xsl:choose>
+								<xsl:when test="./section/title/@footer">
+									<xsl:value-of select="./section/title/@footer"/>
+								</xsl:when>
+								<xsl:when test="./chapter/title/@footer">
+									<xsl:value-of select="./chapter/title/@footer"/>
+								</xsl:when>
+								<xsl:otherwise>
+									<fo:block>FOOTERPLACEHOLDER</fo:block>
+								</xsl:otherwise>
+							</xsl:choose>
                         </xsl:when>
+						<xsl:when test="$sequence = 'odd' or $sequence = 'first'">
+							<xsl:choose>
+								<xsl:when test="$position = 'right'">
+									<xsl:choose>
+										<xsl:when test="./section/title/@footer_right">
+											<xsl:value-of select="./section/title/@footer_right"/>
+										</xsl:when>
+										<xsl:when test="./chapter/title/@footer_right">
+											<xsl:value-of select="./chapter/title/@footer_right"/>
+										</xsl:when>
+										<xsl:otherwise>
+											FOOTERRIGHTPLACEHOLDER
+										</xsl:otherwise>
+									</xsl:choose>
+								</xsl:when>
+								<xsl:when test="$position = 'left'">
+									<xsl:choose>
+										<xsl:when test="./section/title/@footer_left">
+											<xsl:value-of select="./section/title/@footer_left"/>
+										</xsl:when>
+										<xsl:when test="./chapter/title/@footer_left">
+											<xsl:value-of select="./chapter/title/@footer_left"/>
+										</xsl:when>
+										<xsl:otherwise>
+											FOOTERLEFTPLACEHOLDER
+										</xsl:otherwise>
+									</xsl:choose>
+								</xsl:when>
+							</xsl:choose>
+						</xsl:when>
+						<xsl:when test="$sequence = 'even' or $sequence = 'blank'">
+							<xsl:choose>
+								<xsl:when test="$position = 'left'">
+									<xsl:choose>
+										<xsl:when test="./section/title/@footer_right">
+											<xsl:value-of select="./section/title/@footer_right"/>
+										</xsl:when>
+										<xsl:when test="./chapter/title/@footer_right">
+											<xsl:value-of select="./chapter/title/@footer_right"/>
+										</xsl:when>
+										<xsl:otherwise>
+											FOOTERRIGHTPLACEHOLDER
+										</xsl:otherwise>
+									</xsl:choose>
+								</xsl:when>
+								<xsl:when test="$position = 'right'">
+									<xsl:choose>
+										<xsl:when test="./section/title/@footer_left">
+											<xsl:value-of select="./section/title/@footer_left"/>
+										</xsl:when>
+										<xsl:when test="./chapter/title/@footer_left">
+											<xsl:value-of select="./chapter/title/@footer_left"/>
+										</xsl:when>
+										<xsl:otherwise>
+											FOOTERLEFTPLACEHOLDER
+										</xsl:otherwise>
+									</xsl:choose>
+								</xsl:when>
+							</xsl:choose>
+						</xsl:when>
 					</xsl:choose>
 				</xsl:when>
 				<xsl:otherwise>

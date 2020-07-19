@@ -276,10 +276,31 @@ class SpecialGetDocbook extends SpecialPage {
 		} else {
 			$xsl_contents = str_replace( 'HEADERPLACEHOLDER', "", $xsl_contents );
 		}
+		if ( array_key_exists( 'header_right', $options ) ) {
+			$xsl_contents = str_replace( 'HEADERRIGHTPLACEHOLDER', $options['header_right'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'HEADERRIGHTPLACEHOLDER', "", $xsl_contents );
+		}
+		if ( array_key_exists( 'header_left', $options ) ) {
+			$xsl_contents = str_replace( 'HEADERLEFTPLACEHOLDER', $options['header_left'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'HEADERLEFTPLACEHOLDER', "", $xsl_contents );
+		}
+
 		if ( array_key_exists( 'footer', $options ) ) {
 			$xsl_contents = str_replace( 'FOOTERPLACEHOLDER', $options['footer'], $xsl_contents );
 		} else {
 			$xsl_contents = str_replace( 'FOOTERPLACEHOLDER', "", $xsl_contents );
+		}
+		if ( array_key_exists( 'footer_right', $options ) ) {
+			$xsl_contents = str_replace( 'FOOTERRIGHTPLACEHOLDER', $options['footer_right'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'FOOTERRIGHTPLACEHOLDER', "", $xsl_contents );
+		}
+		if ( array_key_exists( 'footer_left', $options ) ) {
+			$xsl_contents = str_replace( 'FOOTERLEFTPLACEHOLDER', $options['footer_left'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'FOOTERLEFTPLACEHOLDER', "", $xsl_contents );
 		}
 
 		if ( array_key_exists( 'section_autolabel_max_depth', $options ) ) {
@@ -352,11 +373,20 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		$xsltproc_args = "";
-		if ( array_key_exists( 'font', $options ) ) {
-			$xsltproc_args .= " --stringparam  body.font.family " . $options['font'] . " ";
+		if ( array_key_exists( 'body.font.family', $options ) ) {
+			$xsltproc_args .= " --stringparam  body.font.family " . $options['body.font.family'] . " ";
 		}
-		if ( array_key_exists( 'font size', $options ) ) {
-			$xsltproc_args .= " --stringparam  body.font.master " . $options['font size'] . " ";
+		if ( array_key_exists( 'body.font.size', $options ) ) {
+			$xsltproc_args .= " --stringparam  body.font.size " . $options['body.font.size'] . " ";
+		}
+		if ( array_key_exists( 'title.font.family', $options ) ) {
+			$xsltproc_args .= " --stringparam  title.font.family " . $options['title.font.family'] . " ";
+		}
+		if ( array_key_exists( 'footnote.font.family', $options ) ) {
+			$xsltproc_args .= " --stringparam  footnote.font.family " . $options['footnote.font.family'] . " ";
+		}
+		if ( array_key_exists( 'footnote.font.size', $options ) ) {
+			$xsltproc_args .= " --stringparam  footnote.font.size " . $options['footnote.font.size'] . " ";
 		}
 
 		if ( !empty( $xsltproc_args ) ) {
@@ -401,19 +431,31 @@ class SpecialGetDocbook extends SpecialPage {
 			$display_pagename = $wiki_pages[0];
 			$orientation_mode = "";
 
-			if ( !empty( $parameters ) ) {
-				if ( array_key_exists( 'title', $parameters ) ) {
-					$display_pagename = $parameters['title'];
-				}
-				if ( array_key_exists( 'header', $parameters ) ) {
-					$custom_header = ' header="' . $parameters['header']. '"';
-				}
-				if ( array_key_exists( 'orientation', $parameters ) && $parameters['orientation'] == "landscape" ) {
-					$orientation_mode = ' role="landscape"';
-				}
-				if ( array_key_exists( 'orientation', $parameters ) && $parameters['orientation'] == "portrait" ) {
-					$orientation_mode = ' role="portrait"';
-				}
+			if ( array_key_exists( 'title', $parameters ) ) {
+				$display_pagename = $parameters['title'];
+			}
+			if ( array_key_exists( 'header', $parameters ) ) {
+				$custom_header .= ' header="' . $parameters['header']. '"';
+			} else {
+				$custom_header .= ' header="' . $display_pagename. '"';
+			}
+			if ( array_key_exists( 'header_right', $parameters ) ) {
+				$custom_header .= ' header_right="' . $parameters['header_right']. '"';
+			}
+			if ( array_key_exists( 'header_left', $parameters ) ) {
+				$custom_header .= ' header_left="' . $parameters['header_left']. '"';
+			}
+			if ( array_key_exists( 'footer_right', $parameters ) ) {
+				$custom_header .= ' footer_right="' . $parameters['footer_right']. '"';
+			}
+			if ( array_key_exists( 'footer_left', $parameters ) ) {
+				$custom_header .= ' footer_left="' . $parameters['footer_left']. '"';
+			}
+			if ( array_key_exists( 'orientation', $parameters ) && $parameters['orientation'] == "landscape" ) {
+				$orientation_mode = ' role="landscape"';
+			}
+			if ( array_key_exists( 'orientation', $parameters ) && $parameters['orientation'] == "portrait" ) {
+				$orientation_mode = ' role="portrait"';
 			}
 
 			if ( $identifier == '*' ) {
