@@ -19,6 +19,9 @@
 <xsl:param name="page.margin.inner">MARINNERPLACEHOLDER</xsl:param>
 <xsl:param name="page.margin.outer">MAROUTERPLACEHOLDER</xsl:param>
 
+<xsl:param name="draft.mode">DRAFTPLACEHOLDER</xsl:param>
+<xsl:param name="draft.watermark.image">WATERMARKPLACEHOLDER</xsl:param>
+
 <xsl:template name="header.content">
 	<xsl:param name="pageclass" select="''"/>
 	<xsl:param name="position" select="''"/>

@@ -267,7 +267,48 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 		$book_contents .= '</bookinfo>';
 
+		if ( array_key_exists( 'watermark.text', $options ) ) {
+			$svg_contents = file_get_contents( __DIR__ . '/watermark.svg' );
+			$svg_contents = str_replace( 'TEXTPLACEHOLDER', $options['watermark.text'], $svg_contents );
+			// if ( array_key_exists( 'watermark.rotation', $options ) ) {
+				// $svg_contents = str_replace( 'ROTATEPLACEHOLDER', $options['watermark.rotation'], $svg_contents );
+			// } else {
+				// $svg_contents = str_replace( 'ROTATEPLACEHOLDER', "-45deg", $svg_contents );
+			// }
+			if ( array_key_exists( 'watermark.color', $options ) ) {
+				$svg_contents = str_replace( 'FILLPLACEHOLDER', $options['watermark.color'], $svg_contents );
+			} else {
+				$svg_contents = str_replace( 'FILLPLACEHOLDER', "#f2f2f2", $svg_contents );
+			}
+			if ( array_key_exists( 'watermark.font.family', $options ) ) {
+				$svg_contents = str_replace( 'FONTPLACEHOLDER', $options['watermark.font.family'], $svg_contents );
+			} else {
+				$svg_contents = str_replace( 'FONTPLACEHOLDER', "Sans", $svg_contents );
+			}
+			if ( array_key_exists( 'watermark.font.size', $options ) ) {
+				$svg_contents = str_replace( 'FONTSIZEPLACEHOLDER', $options['watermark.font.size'], $svg_contents );
+			} else {
+				$svg_contents = str_replace( 'FONTSIZEPLACEHOLDER', "60px", $svg_contents );
+			}
+			if ( !file_put_contents( "$uploadDir/$docbook_folder/watermark.svg", $svg_contents ) ) {
+				$out->wrapWikiMsg(
+					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
+					"Failed to create file watermark.svg"
+				);
+				return;
+			} else {
+				$all_files[] = "$uploadDir/$docbook_folder/watermark.svg";
+			}
+		}
+
 		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template.xsl' );
+		if ( array_key_exists( 'watermark.text', $options ) ) {
+			$xsl_contents = str_replace( 'DRAFTPLACEHOLDER', "yes", $xsl_contents );
+			$xsl_contents = str_replace( 'WATERMARKPLACEHOLDER', "images/watermark.svg", $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'DRAFTPLACEHOLDER', "no", $xsl_contents );
+			$xsl_contents = str_replace( 'WATERMARKPLACEHOLDER', "", $xsl_contents );
+		}
 		if ( array_key_exists( 'xsl_import_path', $options ) ) {
 			$xsl_contents = str_replace( 'DOCBOOKXSLPLACEHOLDER', $options['xsl_import_path'], $xsl_contents );
 		}
