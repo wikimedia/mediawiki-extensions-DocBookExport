@@ -19,6 +19,17 @@
 <xsl:param name="page.margin.inner">MARINNERPLACEHOLDER</xsl:param>
 <xsl:param name="page.margin.outer">MAROUTERPLACEHOLDER</xsl:param>
 
+<xsl:param name="body.font.family">BODYFONTFAMILYPLACEHOLDER</xsl:param>
+<xsl:param name="body.font.size">BODYFONTSIZEPLACEHOLDER</xsl:param>
+<xsl:param name="title.font.family">TITLEFONTFAMILYPLACEHOLDER</xsl:param>
+<xsl:param name="footnote.font.size">FOOTNOTEFONTSIZEPLACEHOLDER</xsl:param>
+
+<xsl:attribute-set name="footnote.properties">
+	<xsl:attribute name="font-family">FOOTNOTEFONTFAMILYPLACEHOLDER</xsl:attribute>
+</xsl:attribute-set>
+
+
+
 <xsl:param name="draft.mode">DRAFTPLACEHOLDER</xsl:param>
 <xsl:param name="draft.watermark.image">WATERMARKPLACEHOLDER</xsl:param>
 

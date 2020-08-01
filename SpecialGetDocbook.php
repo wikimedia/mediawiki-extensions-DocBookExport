@@ -391,6 +391,31 @@ class SpecialGetDocbook extends SpecialPage {
 		} else {
 			$xsl_contents = str_replace( 'MARBOTPLACEHOLDER', "0.5in", $xsl_contents );
 		}
+		if ( array_key_exists( 'body.font.family', $options ) ) {
+			$xsl_contents = str_replace( 'BODYFONTFAMILYPLACEHOLDER', $options['body.font.family'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'BODYFONTFAMILYPLACEHOLDER', "serif", $xsl_contents );
+		}
+		if ( array_key_exists( 'body.font.size', $options ) ) {
+			$xsl_contents = str_replace( 'BODYFONTSIZEPLACEHOLDER', $options['body.font.size'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'BODYFONTSIZEPLACEHOLDER', "10", $xsl_contents );
+		}
+		if ( array_key_exists( 'title.font.family', $options ) ) {
+			$xsl_contents = str_replace( 'TITLEFONTFAMILYPLACEHOLDER', $options['title.font.family'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'TITLEFONTFAMILYPLACEHOLDER', "sans-serif", $xsl_contents );
+		}
+		if ( array_key_exists( 'footnote.font.family', $options ) ) {
+			$xsl_contents = str_replace( 'FOOTNOTEFONTFAMILYPLACEHOLDER', $options['footnote.font.family'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'FOOTNOTEFONTFAMILYPLACEHOLDER', "serif", $xsl_contents );
+		}
+		if ( array_key_exists( 'footnote.font.size', $options ) ) {
+			$xsl_contents = str_replace( 'FOOTNOTEFONTSIZEPLACEHOLDER', $options['footnote.font.size'], $xsl_contents );
+		} else {
+			$xsl_contents = str_replace( 'FOOTNOTEFONTSIZEPLACEHOLDER', "8", $xsl_contents );
+		}
 
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport.xsl", $xsl_contents ) ) {
 			$out->wrapWikiMsg(
@@ -411,35 +436,6 @@ class SpecialGetDocbook extends SpecialPage {
 			return;
 		} else {
 			$all_files[] = "$uploadDir/$docbook_folder/pagenumberprefixes.xsl";
-		}
-
-		$xsltproc_args = "";
-		if ( array_key_exists( 'body.font.family', $options ) ) {
-			$xsltproc_args .= " --stringparam  body.font.family " . $options['body.font.family'] . " ";
-		}
-		if ( array_key_exists( 'body.font.size', $options ) ) {
-			$xsltproc_args .= " --stringparam  body.font.size " . $options['body.font.size'] . " ";
-		}
-		if ( array_key_exists( 'title.font.family', $options ) ) {
-			$xsltproc_args .= " --stringparam  title.font.family " . $options['title.font.family'] . " ";
-		}
-		if ( array_key_exists( 'footnote.font.family', $options ) ) {
-			$xsltproc_args .= " --stringparam  footnote.font.family " . $options['footnote.font.family'] . " ";
-		}
-		if ( array_key_exists( 'footnote.font.size', $options ) ) {
-			$xsltproc_args .= " --stringparam  footnote.font.size " . $options['footnote.font.size'] . " ";
-		}
-
-		if ( !empty( $xsltproc_args ) ) {
-			if ( !file_put_contents( "$uploadDir/$docbook_folder/xsltproc_args.txt", $xsltproc_args ) ) {
-				$out->wrapWikiMsg(
-					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-					"Failed to create file xsltproc_args.txt"
-				);
-				return;
-			} else {
-				$all_files[] = "$uploadDir/$docbook_folder/xsltproc_args.txt";
-			}
 		}
 
 		$css_contents = file_get_contents( __DIR__ . '/docbookexport_styles.css' );
