@@ -11,7 +11,7 @@ class SpecialGetDocbook extends SpecialPage {
 	private $embed_page = '';
 	private $bookname = '';
 
-	private $section_levels = [ "h2", "h3", "h4", "h5", "h6" ];
+	private $section_levels = [ "h1", "h2", "h3", "h4", "h5", "h6" ];
 
 	function execute( $query ) {
 		global $wgServer, $wgScriptPath, $wgDocbookExportPandocServerPath;
