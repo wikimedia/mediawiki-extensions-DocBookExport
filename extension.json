@@ -9,6 +9,9 @@
 	"license-name": "MIT",
 	"descriptionmsg": "docbookexport-desc",
 	"type": "other",
+	"requires": {
+		"MediaWiki": ">= 1.35.0"
+	},
 	"AutoloadClasses": {
 		"DocBookExport": "DocBookExport.php",
 		"SpecialGetDocbook": "SpecialGetDocbook.php"

@@ -206,7 +206,6 @@ class SpecialGetDocbook extends SpecialPage {
 		$popts->setIsPreview( false );
 		$popts->setIsSectionPreview( false );
 		$popts->setEditSection( false );
-		$popts->setTidy( true );
 
 		$book_contents .= '<bookinfo><title>' . $options['title'] . '</title>';
 		if ( !empty( $options['titleabbrev'] ) ) {
