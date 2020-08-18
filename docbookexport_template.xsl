@@ -6,6 +6,8 @@
 
 <xsl:import href="pagenumberprefixes.xsl"/>
 
+<xsl:param name="generate.toc" select="'book toc,title,figure'"/>
+
 <xsl:param name="ulink.show" select="0"></xsl:param>
 <xsl:param name="double.sided" select="1" />
 <xsl:param name="page.orientation">ORIENTATIONPLACEHOLDER</xsl:param>
