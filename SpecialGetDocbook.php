@@ -494,8 +494,21 @@ class SpecialGetDocbook extends SpecialPage {
 				$orientation_mode = ' role="portrait"';
 			}
 
-			if ( $identifier == '*' ) {
-			$content_started = true;
+			$chapter_container = false;
+
+			if ( $identifier == '+' ) {
+				$content_started = true;
+				$chapter_container = true;
+				$this_level = $deep_level;
+				while( $this_level >= 0 ) {
+					if ( array_key_exists( $this_level, $close_tags ) ) {
+						$book_contents .= $close_tags[$this_level];
+						$close_tags[$this_level] = '';
+					}
+					$this_level--;
+				}
+			} else if ( $identifier == '*' ) {
+				$content_started = true;
 				$this_level = $deep_level;
 				while( $this_level >= 0 ) {
 					if ( array_key_exists( $this_level, $close_tags ) ) {
@@ -551,7 +564,9 @@ class SpecialGetDocbook extends SpecialPage {
 				$this->getResult()->addValue( 'result', 'failed', "Unsupported identifier: $identifier used in page structure" );
 			}
 
-			$book_contents .= "<title$custom_header>$display_pagename</title>";
+			if ( !$chapter_container ) {
+				$book_contents .= "<title$custom_header>$display_pagename</title>";
+			}
 			foreach( $wiki_pages as $wikipage ) {
 				$titleObj = Title::newFromText( $wikipage );
 				if ( $titleObj == null || !$titleObj->exists() ) {
@@ -561,7 +576,7 @@ class SpecialGetDocbook extends SpecialPage {
 					);
 					return;
 				}
-				$book_contents .= $this->getHTMLFromWikiPage( $wikipage, $all_files, $popts );
+				$book_contents .= $this->getHTMLFromWikiPage( $wikipage, $all_files, $popts, $chapter_container );
 			}
 		}
 		$this_level = $deep_level;
@@ -734,7 +749,7 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 	}
 
-	public function getHTMLFromWikiPage( $wikipage, &$all_files, $popts ) {
+	public function getHTMLFromWikiPage( $wikipage, &$all_files, $popts, $chapter_container ) {
 		global $wgServer;
 
 		$placeholderId = 0;
@@ -769,7 +784,7 @@ class SpecialGetDocbook extends SpecialPage {
 
 		$page_html = $parser_output->getText();
 
-		$page_html = $this->recursiveFindSections( $wikipage, $page_html, 0 );
+		$page_html = $this->recursiveFindSections( $wikipage, $page_html, 0, $chapter_container );
 
 		$dom = new DOMDocument();
 		libxml_use_internal_errors(true);
@@ -872,15 +887,13 @@ class SpecialGetDocbook extends SpecialPage {
 		return $html;
 	}
 
-	protected function recursiveFindSections( $wikipage, $page_html, $section_level ) {
+	protected function recursiveFindSections( $wikipage, $page_html, $section_level, $chapter_container = false ) {
 		$section_header = $this->section_levels[$section_level];
-		$no_sections = true;
 		$offset = 0;
 		$new_page_html = '';
 		$open_section = false;
 
 		while( ( $pos = strpos( $page_html, "<$section_header>", $offset ) ) !== FALSE ) {
-			$no_sections = false;
 			if ( $pos != 0 ) {
 				if ( $section_level == ( count( $this->section_levels ) -1 ) ) {
 					$temp_html = '<html_pandoc>' . substr( $page_html, $offset, $pos - $offset ) . '</html_pandoc>';
@@ -891,14 +904,22 @@ class SpecialGetDocbook extends SpecialPage {
 				}
 			}
 			if ( $open_section ) {
-				$new_page_html .= '</section>';
+				if ( $section_level == 0 && $chapter_container ) {
+					$new_page_html .= '</chapter>';
+				} else {
+					$new_page_html .= '</section>';
+				}
 				$open_section = false;
 			}
 			$pos += 4;
 			$offset = strpos( $page_html, "</$section_header>", $pos );
 			$title_html = substr( $page_html, $pos, $offset - $pos );
 			$title_html = str_replace( 'id="', 'id="' . uniqid() . '_' . str_replace( " ", "_", $wikipage ) . '_', $title_html );
-			$new_page_html .= '<section><title><html_pandoc>' . $title_html . '</html_pandoc></title>';
+			if ( $section_level == 0 && $chapter_container ) {
+				$new_page_html .= '<chapter><title><html_pandoc>' . $title_html . '</html_pandoc></title>';
+			} else {
+				$new_page_html .= '<section><title><html_pandoc>' . $title_html . '</html_pandoc></title>';
+			}
 			$offset += 5;
 			$open_section = true;
 		}
@@ -910,11 +931,15 @@ class SpecialGetDocbook extends SpecialPage {
 			} else {
 				$new_page_html .= $this->recursiveFindSections( $wikipage, substr( $page_html, $offset, strlen( $page_html ) - $offset ), $section_level + 1 );
 			}
-			$new_page_html .= '</section>';
+			if ( $section_level == 0 && $chapter_container ) {
+				$new_page_html .= '</chapter>';
+			} else {
+				$new_page_html .= '</section>';
+			}
 			$open_section = false;
 			$page_html = $new_page_html;
-		}
-		if ( $no_sections ) {
+		} else {
+			// No header of $section_level were present
 			if ( $section_level == ( count( $this->section_levels ) -1 ) ) {
 				$page_html = makeProperHtml( '<html_pandoc>' . $page_html . '</html_pandoc>' );
 			} else {
