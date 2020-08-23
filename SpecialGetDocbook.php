@@ -842,7 +842,8 @@ class SpecialGetDocbook extends SpecialPage {
 						}
 					}
 					if ( $file ) {
-						$file_path = $file->transform( [ 'width' => $width, 'height' => $height ] )->getLocalCopyPath();
+						$file_path = $file->getLocalRefPath();
+						$file_url = $file_name;
 					} else {
 						$error = true;
 					}
