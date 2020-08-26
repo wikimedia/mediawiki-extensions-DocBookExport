@@ -6,6 +6,7 @@
 
 <xsl:import href="pagenumberprefixes.xsl"/>
 
+<xsl:param name="process.empty.source.toc" select="1"></xsl:param>
 <xsl:param name="generate.toc" select="'book toc,title,figure'"/>
 
 <xsl:param name="ulink.show" select="0"></xsl:param>
