@@ -519,15 +519,17 @@ class SpecialGetDocbook extends SpecialPage {
 					}
 					$this_level--;
 				}
+
+				if ( !$content_started ) {
+					$book_contents .= '<toc/>';
+				}
+				$content_started = true;
+
 				$book_contents .= '<chapter'. $orientation_mode .'>';
 				if ( !array_key_exists( 0, $close_tags ) ) {
 					$close_tags[0] = '';
 				}
 				$close_tags[0] .= '</chapter>';
-				if ( !$content_started ) {
-					$book_contents .= '<toc/>';
-				}
-				$content_started = true;
 			} else if ( $identifier[0] == '*' ) {
 				$indent_level = strlen( $identifier ) - 1;
 				$deep_level = max( $deep_level, $indent_level );
