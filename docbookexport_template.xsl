@@ -12,7 +12,7 @@
 <xsl:param name="ulink.show" select="0"></xsl:param>
 <xsl:param name="double.sided" select="1" />
 <xsl:param name="page.orientation">ORIENTATIONPLACEHOLDER</xsl:param>
-<xsl:param name="paper.type">SIZEPLACEHOLDER</xsl:param>
+<xsl:param name="paper.type">PAPERSIZEPLACEHOLDER</xsl:param>
 <xsl:param name="column.count.body" select="COLUMNSPLACEHOLDER"></xsl:param>
 
 <xsl:param name="section.autolabel.max.depth">SECTION_AUTOLABEL_MAX_DEPTH_PLACEHOLDER</xsl:param>

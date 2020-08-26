@@ -361,9 +361,9 @@ class SpecialGetDocbook extends SpecialPage {
 			$xsl_contents = str_replace( 'ORIENTATIONPLACEHOLDER', "portrait", $xsl_contents );
 		}
 		if ( array_key_exists( 'size', $options ) ) {
-			$xsl_contents = str_replace( 'SIZEPLACEHOLDER', $options['size'], $xsl_contents );
+			$xsl_contents = str_replace( 'PAPERSIZEPLACEHOLDER', $options['size'], $xsl_contents );
 		} else {
-			$xsl_contents = str_replace( 'SIZEPLACEHOLDER', "USletter", $xsl_contents );
+			$xsl_contents = str_replace( 'PAPERSIZEPLACEHOLDER', "USletter", $xsl_contents );
 		}
 		if ( array_key_exists( 'columns', $options ) ) {
 			$xsl_contents = str_replace( 'COLUMNSPLACEHOLDER', $options['columns'], $xsl_contents );
