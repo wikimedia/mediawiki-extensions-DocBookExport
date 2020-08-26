@@ -496,6 +496,12 @@ class SpecialGetDocbook extends SpecialPage {
 
 			$chapter_container = false;
 
+			if ( $identifier == '+' || $identifier == '*' ) {
+				if ( !$content_started ) {
+					$book_contents .= '<toc/>';
+				}
+			}
+
 			if ( $identifier == '+' ) {
 				$content_started = true;
 				$chapter_container = true;
