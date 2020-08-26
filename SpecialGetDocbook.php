@@ -496,14 +496,7 @@ class SpecialGetDocbook extends SpecialPage {
 
 			$chapter_container = false;
 
-			if ( $identifier == '+' || $identifier == '*' ) {
-				if ( !$content_started ) {
-					$book_contents .= '<toc/>';
-				}
-			}
-
 			if ( $identifier == '+' ) {
-				$content_started = true;
 				$chapter_container = true;
 				$this_level = $deep_level;
 				while( $this_level >= 0 ) {
@@ -513,8 +506,11 @@ class SpecialGetDocbook extends SpecialPage {
 					}
 					$this_level--;
 				}
-			} else if ( $identifier == '*' ) {
+				if ( !$content_started ) {
+					$book_contents .= '<toc/>';
+				}
 				$content_started = true;
+			} else if ( $identifier == '*' ) {
 				$this_level = $deep_level;
 				while( $this_level >= 0 ) {
 					if ( array_key_exists( $this_level, $close_tags ) ) {
@@ -528,6 +524,10 @@ class SpecialGetDocbook extends SpecialPage {
 					$close_tags[0] = '';
 				}
 				$close_tags[0] .= '</chapter>';
+				if ( !$content_started ) {
+					$book_contents .= '<toc/>';
+				}
+				$content_started = true;
 			} else if ( $identifier[0] == '*' ) {
 				$indent_level = strlen( $identifier ) - 1;
 				$deep_level = max( $deep_level, $indent_level );
