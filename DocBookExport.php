@@ -44,7 +44,29 @@ class DocBookExport {
         $serialized = serialize( $options );
         $parser->getOutput()->setProperty( md5( 'docbook_' . str_replace( " ", "_", $options['title'] ) ), $serialized );
 
-		return Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Get Docbook - " . $options['title'], [], [ 'embed_page' => $parser->getTitle()->getText(), 'bookname' => str_replace( " ", "_", $options['title'] ) ] );
+		$docbook_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Get Docbook - " . $options['title'], [], [ 'embed_page' => $parser->getTitle()->getText(), 'bookname' => str_replace( " ", "_", $options['title'] ) ] );
+
+		$docbook_preview = '';
+
+		$page_structure = explode( "\n", $options['page structure'] );
+		foreach( $page_structure as $current_line ) {
+			$parts = explode( ' ', $current_line, 2 );
+			if ( count( $parts ) < 2 ) {
+				continue;
+			}
+			$identifier = $parts[0];
+			$after_identifier = $parts[1];
+			list( $param_content, $parameters ) = SpecialGetDocbook::extractParametersInBrackets( $after_identifier );
+
+			$docbook_preview .= '<br>' . $identifier . " " . implode(
+				", ",
+				array_map( function( $pagename ) {
+					return Linker::linkKnown( Title::newFromText( $pagename ), $pagename );
+				}, explode( ',', $param_content ) )
+			);
+		}
+
+		return $docbook_link . '<br><h3>Docbook Tree</h3>' . $docbook_preview;
 	}
 
 	public static function extractOptions( array $options ) {
