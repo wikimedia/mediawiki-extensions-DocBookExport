@@ -264,6 +264,23 @@ class SpecialGetDocbook extends SpecialPage {
 			}
 			$book_contents .= '</subjectset>';
 		}
+		if ( !empty( $options['logo'] ) ) {
+			if ( method_exists( MediaWikiServices::class, 'getRepoGroup' ) ) {
+				// MediaWiki 1.34+
+				$repoGroup = MediaWikiServices::getInstance()->getRepoGroup();
+			} else {
+				$repoGroup = RepoGroup::singleton();
+			}
+			$file_path = $repoGroup->findFile( basename( $options['logo'] ) )->getLocalRefPath();
+			$all_files[] = $file_path;
+			$book_contents .= '
+				<mediaobject>
+				  <imageobject>
+					<imagedata fileref="'. $file_path .'" contentwidth="9cm"/>
+				  </imageobject>
+				</mediaobject>
+			';
+		}
 		$book_contents .= '</bookinfo>';
 
 		if ( array_key_exists( 'watermark.text', $options ) ) {
