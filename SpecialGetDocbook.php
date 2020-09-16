@@ -623,14 +623,14 @@ class SpecialGetDocbook extends SpecialPage {
 			return;
 		}
 
-		if ( !file_put_contents( "$uploadDir/$docbook_folder/$docbook_folder.pandochtml", $book_contents ) ) {
+		if ( !file_put_contents( "$uploadDir/$docbook_folder/$docbook_folder" . "_pandoc.html", $book_contents ) ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Failed to create file $docbook_folder.pandochtml"
+				"Failed to create file $docbook_folder" . "_pandoc.html"
 			);
 			return;
 		} else {
-			$all_files[] = "$uploadDir/$docbook_folder/$docbook_folder.pandochtml";
+			$all_files[] = "$uploadDir/$docbook_folder/$docbook_folder" . "_pandoc.html";
 		}
 
 		// Set postdata array
