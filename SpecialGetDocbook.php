@@ -317,16 +317,13 @@ class SpecialGetDocbook extends SpecialPage {
 			}
 		}
 
-		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template.xsl' );
+		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template_import.xsl' );
 		if ( array_key_exists( 'watermark.text', $options ) ) {
 			$xsl_contents = str_replace( 'DRAFTPLACEHOLDER', "yes", $xsl_contents );
 			$xsl_contents = str_replace( 'WATERMARKPLACEHOLDER', "images/watermark.svg", $xsl_contents );
 		} else {
 			$xsl_contents = str_replace( 'DRAFTPLACEHOLDER', "no", $xsl_contents );
 			$xsl_contents = str_replace( 'WATERMARKPLACEHOLDER', "", $xsl_contents );
-		}
-		if ( array_key_exists( 'xsl_import_path', $options ) ) {
-			$xsl_contents = str_replace( 'DOCBOOKXSLPLACEHOLDER', $options['xsl_import_path'], $xsl_contents );
 		}
 		if ( array_key_exists( 'header', $options ) ) {
 			$xsl_contents = str_replace( 'HEADERPLACEHOLDER', $options['header'], $xsl_contents );
@@ -433,6 +430,20 @@ class SpecialGetDocbook extends SpecialPage {
 			$xsl_contents = str_replace( 'FOOTNOTEFONTSIZEPLACEHOLDER', "8", $xsl_contents );
 		}
 
+		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport_template_import.xsl", $xsl_contents ) ) {
+			$out->wrapWikiMsg(
+				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
+				"Failed to create file docbookexport_template_import.xsl"
+			);
+			return;
+		} else {
+			$all_files[] = "$uploadDir/$docbook_folder/docbookexport_template_import.xsl";
+		}
+
+		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template.xsl' );
+		if ( array_key_exists( 'xsl_import_path', $options ) ) {
+			$xsl_contents = str_replace( 'docbookexport_template_override.xsl', $options['xsl_import_path'], $xsl_contents );
+		}
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport.xsl", $xsl_contents ) ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
@@ -442,6 +453,18 @@ class SpecialGetDocbook extends SpecialPage {
 		} else {
 			$all_files[] = "$uploadDir/$docbook_folder/docbookexport.xsl";
 		}
+
+		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template_override.xsl' );
+		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport_template_override.xsl", $xsl_contents ) ) {
+			$out->wrapWikiMsg(
+				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
+				"Failed to create file docbookexport_template_override.xsl"
+			);
+			return;
+		} else {
+			$all_files[] = "$uploadDir/$docbook_folder/docbookexport_template_override.xsl";
+		}
+
 
 		$pagenumberprefixes = file_get_contents( __DIR__ . '/pagenumberprefixes.xsl' );
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/pagenumberprefixes.xsl", $pagenumberprefixes ) ) {
