@@ -635,7 +635,12 @@ class SpecialGetDocbook extends SpecialPage {
 			}
 			$this_level--;
 		}
-		$book_contents .= '<index/></book>';
+
+		if ( array_key_exists( 'index', $options ) && $options['index'] == 1 ) {
+			$book_contents .= '<index/>';
+		}
+
+		$book_contents .= '</book>';
 
 		$status = $this->checkForErrors( $book_contents );
 		if ( !$status->isGood() ) {
