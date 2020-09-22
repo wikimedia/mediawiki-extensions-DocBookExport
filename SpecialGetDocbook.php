@@ -318,118 +318,92 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template_import.xsl' );
+		$xsl_customization = "";
 		if ( array_key_exists( 'watermark.text', $options ) ) {
-			$xsl_contents = str_replace( 'DRAFTPLACEHOLDER', "yes", $xsl_contents );
-			$xsl_contents = str_replace( 'WATERMARKPLACEHOLDER', "images/watermark.svg", $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'DRAFTPLACEHOLDER', "no", $xsl_contents );
-			$xsl_contents = str_replace( 'WATERMARKPLACEHOLDER', "", $xsl_contents );
-		}
-		if ( array_key_exists( 'header', $options ) ) {
-			$xsl_contents = str_replace( 'HEADERPLACEHOLDER', $options['header'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'HEADERPLACEHOLDER', "", $xsl_contents );
-		}
-		if ( array_key_exists( 'header_right', $options ) ) {
-			$xsl_contents = str_replace( 'HEADERRIGHTPLACEHOLDER', $options['header_right'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'HEADERRIGHTPLACEHOLDER', "", $xsl_contents );
-		}
-		if ( array_key_exists( 'header_left', $options ) ) {
-			$xsl_contents = str_replace( 'HEADERLEFTPLACEHOLDER', $options['header_left'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'HEADERLEFTPLACEHOLDER', "", $xsl_contents );
+			$xsl_customization .= '<xsl:param name="draft.mode">yes</xsl:param>';
+			$xsl_customization .= '<xsl:param name="draft.watermark.image">images/watermark.svg</xsl:param>';
 		}
 
-		if ( array_key_exists( 'footer', $options ) ) {
-			$xsl_contents = str_replace( 'FOOTERPLACEHOLDER', $options['footer'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'FOOTERPLACEHOLDER', "", $xsl_contents );
+		if ( array_key_exists( 'header_right', $options ) || array_key_exists( 'header_left', $options ) ) {
+			$xsl_contents_temp = file_get_contents( __DIR__ . '/docbookexport_template_header_customization.xsl' );
+			$xsl_contents_temp = str_replace( 'HEADERRIGHTPLACEHOLDER', $options['header_right'], $xsl_contents_temp );
+			$xsl_contents_temp = str_replace( 'HEADERLEFTPLACEHOLDER', $options['header_left'], $xsl_contents_temp );
+			$xsl_customization .= $xsl_contents_temp;
 		}
-		if ( array_key_exists( 'footer_right', $options ) ) {
-			$xsl_contents = str_replace( 'FOOTERRIGHTPLACEHOLDER', $options['footer_right'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'FOOTERRIGHTPLACEHOLDER', "", $xsl_contents );
-		}
-		if ( array_key_exists( 'footer_left', $options ) ) {
-			$xsl_contents = str_replace( 'FOOTERLEFTPLACEHOLDER', $options['footer_left'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'FOOTERLEFTPLACEHOLDER', "", $xsl_contents );
+
+		if ( array_key_exists( 'footer_right', $options ) || array_key_exists( 'footer_left', $options ) ) {
+			$xsl_contents_temp = file_get_contents( __DIR__ . '/docbookexport_template_footer_customization.xsl' );
+			$xsl_contents_temp = str_replace( 'FOOTERRIGHTPLACEHOLDER', $options['footer_right'], $xsl_contents_temp );
+			$xsl_contents_temp = str_replace( 'FOOTERLEFTPLACEHOLDER', $options['footer_left'], $xsl_contents_temp );
+			$xsl_customization .= $xsl_contents_temp;
 		}
 
 		if ( array_key_exists( 'section_autolabel_max_depth', $options ) ) {
-			$xsl_contents = str_replace( 'SECTION_AUTOLABEL_MAX_DEPTH_PLACEHOLDER', $options['section_autolabel_max_depth'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'SECTION_AUTOLABEL_MAX_DEPTH_PLACEHOLDER', "8", $xsl_contents );
+			$xsl_customization .= '<xsl:param name="section.autolabel.max.depth">'. $options['section_autolabel_max_depth'] .'</xsl:param>';
 		}
 
 		if ( array_key_exists( 'external_link_color', $options ) ) {
-			$xsl_contents = str_replace( 'EXTERNAL_LINK_COLOR', $options['external_link_color'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'EXTERNAL_LINK_COLOR', "blue", $xsl_contents );
+			$xsl_customization .= '
+<xsl:attribute-set name="xref.properties">
+	<xsl:attribute name="color">
+		<xsl:choose>
+			<xsl:when test="self::link and @xlink:href">'. $options['external_link_color'] .'</xsl:when>
+			<xsl:otherwise>black</xsl:otherwise>
+		</xsl:choose>
+	</xsl:attribute>
+</xsl:attribute-set>
+			';
 		}
 
 		if ( array_key_exists( 'orientation', $options ) ) {
-			$xsl_contents = str_replace( 'ORIENTATIONPLACEHOLDER', $options['orientation'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'ORIENTATIONPLACEHOLDER', "portrait", $xsl_contents );
-		}
-		if ( array_key_exists( 'size', $options ) ) {
-			$xsl_contents = str_replace( 'PAPERSIZEPLACEHOLDER', $options['size'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'PAPERSIZEPLACEHOLDER', "USletter", $xsl_contents );
-		}
-		if ( array_key_exists( 'columns', $options ) ) {
-			$xsl_contents = str_replace( 'COLUMNSPLACEHOLDER', $options['columns'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'COLUMNSPLACEHOLDER', "1", $xsl_contents );
-		}
-		if ( array_key_exists( 'margin-inner', $options ) ) {
-			$xsl_contents = str_replace( 'MARINNERPLACEHOLDER', $options['margin-inner'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'MARINNERPLACEHOLDER', "0.5in", $xsl_contents );
-		}
-		if ( array_key_exists( 'margin-outer', $options ) ) {
-			$xsl_contents = str_replace( 'MAROUTERPLACEHOLDER', $options['margin-outer'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'MAROUTERPLACEHOLDER', "0.5in", $xsl_contents );
-		}
-		if ( array_key_exists( 'margin-top', $options ) ) {
-			$xsl_contents = str_replace( 'MARTOPPLACEHOLDER', $options['margin-top'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'MARTOPPLACEHOLDER', "0.5in", $xsl_contents );
-		}
-		if ( array_key_exists( 'margin-bottom', $options ) ) {
-			$xsl_contents = str_replace( 'MARBOTPLACEHOLDER', $options['margin-bottom'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'MARBOTPLACEHOLDER', "0.5in", $xsl_contents );
-		}
-		if ( array_key_exists( 'body.font.family', $options ) ) {
-			$xsl_contents = str_replace( 'BODYFONTFAMILYPLACEHOLDER', $options['body.font.family'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'BODYFONTFAMILYPLACEHOLDER', "serif", $xsl_contents );
-		}
-		if ( array_key_exists( 'body.font.size', $options ) ) {
-			$xsl_contents = str_replace( 'BODYFONTSIZEPLACEHOLDER', $options['body.font.size'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'BODYFONTSIZEPLACEHOLDER', "10", $xsl_contents );
-		}
-		if ( array_key_exists( 'title.font.family', $options ) ) {
-			$xsl_contents = str_replace( 'TITLEFONTFAMILYPLACEHOLDER', $options['title.font.family'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'TITLEFONTFAMILYPLACEHOLDER', "sans-serif", $xsl_contents );
-		}
-		if ( array_key_exists( 'footnote.font.family', $options ) ) {
-			$xsl_contents = str_replace( 'FOOTNOTEFONTFAMILYPLACEHOLDER', $options['footnote.font.family'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'FOOTNOTEFONTFAMILYPLACEHOLDER', "serif", $xsl_contents );
-		}
-		if ( array_key_exists( 'footnote.font.size', $options ) ) {
-			$xsl_contents = str_replace( 'FOOTNOTEFONTSIZEPLACEHOLDER', $options['footnote.font.size'], $xsl_contents );
-		} else {
-			$xsl_contents = str_replace( 'FOOTNOTEFONTSIZEPLACEHOLDER', "8", $xsl_contents );
+			$xsl_customization .= '<xsl:param name="page.orientation">'. $options['orientation'] .'</xsl:param>';
 		}
 
+		if ( array_key_exists( 'size', $options ) ) {
+			$xsl_customization .= '<xsl:param name="paper.type">'. $options['size'] .'</xsl:param>';
+		}
+
+		if ( array_key_exists( 'columns', $options ) ) {
+			$xsl_customization .= '<xsl:param name="column.count.body" select="'. $options['columns'] .'"></xsl:param>';
+		}
+
+		if ( array_key_exists( 'margin-inner', $options ) ) {
+			$xsl_customization .= '<xsl:param name="page.margin.inner">'. $options['margin-inner'] .'</xsl:param>';
+		}
+		if ( array_key_exists( 'margin-outer', $options ) ) {
+			$xsl_customization .= '<xsl:param name="page.margin.outer">'. $options['margin-outer'] .'</xsl:param>';
+		}
+		if ( array_key_exists( 'margin-top', $options ) ) {
+			$xsl_customization .= '<xsl:param name="page.margin.top">'. $options['margin-top'] .'</xsl:param>';
+		}
+		if ( array_key_exists( 'margin-bottom', $options ) ) {
+			$xsl_customization .= '<xsl:param name="page.margin.bottom">'. $options['margin-bottom'] .'</xsl:param>';
+		}
+
+		if ( array_key_exists( 'body.font.family', $options ) ) {
+			$xsl_customization .= '<xsl:param name="body.font.family">'. $options['body.font.family'] .'</xsl:param>';
+		}
+		if ( array_key_exists( 'body.font.size', $options ) ) {
+			$xsl_customization .= '<xsl:param name="body.font.size">'. $options['body.font.size'] .'</xsl:param>';
+		}
+
+		if ( array_key_exists( 'title.font.family', $options ) ) {
+			$xsl_customization .= '<xsl:param name="title.font.family">'. $options['title.font.family'] .'</xsl:param>';
+		}
+
+		if ( array_key_exists( 'footnote.font.family', $options ) ) {
+			$xsl_customization .= '
+<xsl:attribute-set name="footnote.properties">
+	<xsl:attribute name="font-family">'. $options['footnote.font.family'] .'</xsl:attribute>
+</xsl:attribute-set>
+			';
+		}
+
+		if ( array_key_exists( 'footnote.font.size', $options ) ) {
+			$xsl_customization .= '<xsl:param name="footnote.font.size">'. $options['footnote.font.size'] .'</xsl:param>';
+		}
+
+		$xsl_contents = str_replace( "CUSTOMIZED_XSL_PLACEHOLDER", $xsl_customization, $xsl_contents );
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport_template_import.xsl", $xsl_contents ) ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
