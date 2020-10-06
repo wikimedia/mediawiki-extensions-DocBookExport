@@ -14,7 +14,7 @@ class SpecialGetDocbook extends SpecialPage {
 	private $section_levels = [ "h1", "h2", "h3", "h4", "h5", "h6" ];
 
 	function execute( $query ) {
-		global $wgServer, $wgScriptPath, $wgDocbookExportPandocServerPath;
+		global $wgServer, $wgScriptPath, $wgDocbookExportPandocServerPath, $wgDocBookExportXSLRepository, $wgDocBookExportImportXSLRepoPathPDF;
 
 		$this->setHeaders();
 		$request = $this->getRequest();
@@ -198,6 +198,16 @@ class SpecialGetDocbook extends SpecialPage {
 			if ( $repoGroup->findFile( basename( $options['xsl_import'] ) ) ) {
 				$file_path = $repoGroup->findFile( basename( $options['xsl_import'] ) )->getLocalRefPath();
 				$all_files[] = $file_path;
+			}
+		} else if ( !empty( $wgDocBookExportXSLRepository ) ) {
+			if ( !file_put_contents( "$uploadDir/$docbook_folder/xsl_repository.json", json_encode( [ "DocBookExportXSLRepository" => $wgDocBookExportXSLRepository ] ) ) {
+				$out->wrapWikiMsg(
+					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
+					"Failed to create file xsl_repository.json"
+				);
+				return;
+			} else {
+				$all_files[] = "$uploadDir/$docbook_folder/xsl_repository.json";
 			}
 		}
 
@@ -417,6 +427,8 @@ class SpecialGetDocbook extends SpecialPage {
 		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template.xsl' );
 		if ( array_key_exists( 'xsl_import_path', $options ) ) {
 			$xsl_contents = str_replace( 'docbookexport_template_override.xsl', $options['xsl_import_path'], $xsl_contents );
+		} else if ( !empty( $wgDocBookExportImportXSLRepoPathPDF ) ) {
+			$xsl_contents = str_replace( 'docbookexport_template_override.xsl', $wgDocBookExportImportXSLRepoPathPDF, $xsl_contents );
 		}
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport.xsl", $xsl_contents ) ) {
 			$out->wrapWikiMsg(

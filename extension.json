@@ -18,7 +18,10 @@
 	},
 	"config": {
 		"DocbookExportPandocServerPath": "",
-		"DocbookDownloadServerPath": ""
+		"DocbookDownloadServerPath": "",
+		"DocBookExportXSLRepository": "",
+		"DocBookExportImportXSLRepoPathPDF": "",
+		"DocBookExportImportXSLRepoPathHTML": ""
 	},
 	"Hooks": {
 		"ParserFirstCallInit": "DocBookExport::onParserSetup"
