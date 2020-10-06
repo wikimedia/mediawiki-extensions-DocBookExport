@@ -200,7 +200,7 @@ class SpecialGetDocbook extends SpecialPage {
 				$all_files[] = $file_path;
 			}
 		} else if ( !empty( $wgDocBookExportXSLRepository ) ) {
-			if ( !file_put_contents( "$uploadDir/$docbook_folder/xsl_repository.json", json_encode( [ "DocBookExportXSLRepository" => $wgDocBookExportXSLRepository ] ) ) {
+			if ( !file_put_contents( "$uploadDir/$docbook_folder/xsl_repository.json", json_encode( [ "DocBookExportXSLRepository" => $wgDocBookExportXSLRepository ] ) ) ) {
 				$out->wrapWikiMsg(
 					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 					"Failed to create file xsl_repository.json"
