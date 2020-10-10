@@ -712,10 +712,6 @@ class SpecialGetDocbook extends SpecialPage {
 		$request = $this->getRequest();
 		$out = $this->getOutput();
 
-		$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Check Status", [], [ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'check_status' ] );
-
-		$out->addHTML( "<p>$check_status_link</p>" );
-
 		$create_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Re-generate Docbook", ['id' => "create_docbook"], [ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'create' ] );
 		$out->addHTML( "<p>$create_link (Requires upload to Docbook server. This may take a while)</p>" );
 	}
