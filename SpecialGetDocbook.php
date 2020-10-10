@@ -48,6 +48,9 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		$docbook_folder = escapeshellcmd( str_replace( ' ', '_', $options['title'] ) );
+		if ( !empty( $options['volumenum'] ) ) {
+			$docbook_folder .= '_' . $options['volumenum'];
+		}
 		if ( strpos( $docbook_folder, "(" ) !== false || strpos( $docbook_folder, ")" ) !== false ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
@@ -63,6 +66,7 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		if ( empty( $request->getVal( 'action' ) ) ) {
+			$this->getDocbookStatus( $docbook_folder );
 			return $this->getDocbookGenerateButton( $docbook_folder );
 		}
 
@@ -758,7 +762,7 @@ class SpecialGetDocbook extends SpecialPage {
 				$out->addHTML( "<p>Status: ". $result['status'] ."</p>" );
 				$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Refresh Status", [], [ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'check_status' ] );
 				$out->addHTML( "<p>$check_status_link</p>" );
-				if ( $result['status'] == "Docbook generated" ) {
+				if ( strpos( $result['status'], "Docbook generated" ) !== FALSE ) {
 					$out->addHTML( '<a href="'. $wgDocbookDownloadServerPath . $result['docbook_zip'] .'">Download XML</a><br>' );
 					$out->addHTML( '<a href="'. $wgDocbookDownloadServerPath . $result['docbook_html'] .'">Download HTML</a><br>' );
 					$out->addHTML( '<a href="'. $wgDocbookDownloadServerPath . $result['docbook_pdf'] .'">Download PDF</a><br>' );
@@ -775,6 +779,7 @@ class SpecialGetDocbook extends SpecialPage {
 			);
 		} else {
 			if ( $httpcode == 200 ) {
+				$out->addHTML( "<p>Status: ". $result['status'] ."</p>" );
 				$out->wrapWikiMsg(
 					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 					"Docbook was never generated!"

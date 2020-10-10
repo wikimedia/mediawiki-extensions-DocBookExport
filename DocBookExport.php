@@ -42,9 +42,14 @@ class DocBookExport {
 			return "";
 		}
         $serialized = serialize( $options );
-        $parser->getOutput()->setProperty( md5( 'docbook_' . str_replace( " ", "_", $options['title'] ) ), $serialized );
+		$book_name = str_replace( " ", "_", $options['title'] );
+		if ( !empty( $options['volumenum'] ) ) {
+			$book_name .= '_' . $options['volumenum'];
+		}
 
-		$docbook_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Get Docbook - " . $options['title'], [], [ 'embed_page' => $parser->getTitle()->getText(), 'bookname' => str_replace( " ", "_", $options['title'] ) ] );
+        $parser->getOutput()->setProperty( md5( 'docbook_' . $book_name ), $serialized );
+		
+		$docbook_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Get Docbook - " . $book_name, [], [ 'embed_page' => $parser->getTitle()->getText(), 'bookname' => $book_name ] );
 
 		$docbook_preview = '';
 
@@ -66,7 +71,7 @@ class DocBookExport {
 			);
 		}
 
-		return $docbook_link . '<br><h3>Docbook Tree</h3>' . $docbook_preview;
+		return $docbook_link . '<br><h3>Content</h3>' . $docbook_preview;
 	}
 
 	public static function extractOptions( array $options ) {
