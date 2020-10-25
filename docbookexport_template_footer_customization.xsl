@@ -65,5 +65,8 @@
 					</xsl:choose>
 				</xsl:when>
 			</xsl:choose>
+			<xsl:if test="$pageclass != 'titlepage' and $position='center'">
+			  <fo:block space-before="4pt">- <fo:page-number/> -</fo:block>
+			</xsl:if>
         </fo:block>
 </xsl:template>
