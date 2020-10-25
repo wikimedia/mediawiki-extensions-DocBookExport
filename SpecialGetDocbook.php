@@ -262,6 +262,10 @@ class SpecialGetDocbook extends SpecialPage {
 			}
 			$book_contents .= '</revhistory>';
 		}
+
+		if ( !empty( $options['issuenum'] ) ) {
+			$book_contents .= '<issuenum>' . $options['issuenum'] . '</issuenum>';
+		}
 		if ( !empty( $options['keywordset'] ) ) {
 			$book_contents .= '<keywordset>';
 			$keywordset_keywords = explode( ',', $options['keywordset'] );
