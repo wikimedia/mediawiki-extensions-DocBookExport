@@ -506,8 +506,6 @@ class SpecialGetDocbook extends SpecialPage {
 			}
 			if ( array_key_exists( 'header', $parameters ) ) {
 				$custom_header .= ' header="' . $parameters['header']. '"';
-			} else {
-				$custom_header .= ' header="' . $display_pagename. '"';
 			}
 			if ( array_key_exists( 'header_right', $parameters ) ) {
 				$custom_header .= ' header_right="' . $parameters['header_right']. '"';
@@ -958,7 +956,7 @@ class SpecialGetDocbook extends SpecialPage {
 			$pos += 4;
 			$offset = strpos( $page_html, "</$section_header>", $pos );
 			$title_html = substr( $page_html, $pos, $offset - $pos );
-			$title_html = str_replace( 'id="', 'id="' . uniqid() . '_' . str_replace( " ", "_", $wikipage ) . '_', $title_html );
+			$title_html = str_replace( 'id="', 'id="_' . uniqid() . '_' . str_replace( " ", "_", $wikipage ) . '_', $title_html );
 			if ( $section_level == 0 && $chapter_container ) {
 				$new_page_html .= '<chapter><title><html_pandoc>' . $title_html . '</html_pandoc></title>';
 			} else {
