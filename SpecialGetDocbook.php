@@ -71,7 +71,7 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		$book_contents = '<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-		<book lang="en">';
+		<book lang="en" xmlns:xlink="http://www.w3.org/1999/xlink">';
 
 		$all_files = array();
 		$index_terms = array();
