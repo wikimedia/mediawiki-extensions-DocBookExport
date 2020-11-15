@@ -4,8 +4,8 @@ class DocBookExport {
 
 	public static function onParserSetup( Parser &$parser ) {
 		$parser->setHook( 'docbook', 'DocBookExport::parseDocBookSyntaxTagExtension' );
+		$parser->setHook( 'footnote', 'DocBookExport::parseFootNoteSyntaxTagExtension' );
 		$parser->setFunctionHook( 'docbook', 'DocBookExport::parseDocBookSyntaxParserFunction' );
-		$parser->setFunctionHook( 'footnote', 'DocBookExport::parseFootNoteParserExtension' );
 		$parser->setFunctionHook( 'docbook_index', 'DocBookExport::parseDoocBookIndexParserExtension' );
 		return true;
 	}
@@ -17,17 +17,17 @@ class DocBookExport {
 		return '';
 	}
 
-	public static function parseFootNoteParserExtension( $parser ) {
-		$options = self::extractOptions( array_slice( func_get_args(), 1 ) );
-		$footnote_para = $options['para'];
-
-		$output = '<a class="footnote" href="'. urlencode( $footnote_para ) .'"></a>';
-		return array( $output, 'noparse' => true, 'isHTML' => true );
-	}
-
 	public static function parseDocBookSyntaxParserFunction( &$parser ) {
 		$options = self::extractOptions( array_slice( func_get_args(), 1 ) );
 		return array( self::parseDocBookSyntax( $parser, $options ), 'noparse' => true, 'isHTML' => true );
+	}
+
+	public static function parseFootNoteSyntaxTagExtension( $input, array $args, Parser $parser, PPFrame $frame ) {
+		if ( empty( $input ) ) {
+			return '<a class="footnoteref" id="'. $args['name'] .'" href=""></a>';
+		} else {
+			return '<a class="footnote" id="'. $args['name'] .'" href="'. $input .' ."></a>';
+		}
 	}
 
 	public static function parseDocBookSyntaxTagExtension( $input, array $args, Parser $parser, PPFrame $frame ) {

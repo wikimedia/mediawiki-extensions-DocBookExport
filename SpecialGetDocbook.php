@@ -806,17 +806,8 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 		$wikitext = $content->getNativeData() . "\n" . '__NOTOC__ __NOEDITSECTION__';
 
-		preg_match_all( '/<ref ?.*>(.*)<\/ref>/', $wikitext, $matches );
-		if ( count( $matches[1] ) > 0 ) {
-			$footnotes = $matches[1];
-			$wikitext = preg_replace_callback(
-				'/<ref ?.*>(.*)<\/ref>/',
-				function( $matches ) use ( &$placeholderId ) {
-					return '{{#footnote:para='. $matches[1] .'}}';
-				},
-				$wikitext
-			);
-		}
+		$wikitext = str_replace( "<ref", "<footnote", $wikitext );
+		$wikitext = str_replace( "ref>", "footnote>", $wikitext );
 		$content = new WikitextContent( $wikitext );
 
 		$parser_output = $content->getParserOutput( $titleObj, null, $popts );
