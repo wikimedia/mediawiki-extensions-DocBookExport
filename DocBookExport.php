@@ -26,7 +26,7 @@ class DocBookExport {
 		if ( empty( $input ) ) {
 			return '<a class="footnoteref" id="'. $args['name'] .'" href=""></a>';
 		} else {
-			return '<a class="footnote" id="'. $args['name'] .'" href="'. $input .' ."></a>';
+			return '<a class="footnote" id="'. $args['name'] .'" href="'. $parser->recursiveTagParse( $input, $frame ) .' ."></a>';
 		}
 	}
 
