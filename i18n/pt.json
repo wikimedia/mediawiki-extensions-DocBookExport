@@ -1,8 +1,11 @@
 {
 	"@metadata": {
 		"authors": [
+			"Hamilton Abreu",
 			"Mansil"
 		]
 	},
-	"getdocbook": "Obter DocBook"
+	"docbookexport-desc": "Adiciona a função <code><nowiki>{{#docbook:}}</nowiki></code> ao analisador sintático para criar um DocBook de páginas selecionadas da wiki",
+	"getdocbook": "Obter DocBook",
+	"apihelp-getdocbook-summary": "Criar um DocBook de uma página da wiki"
 }
