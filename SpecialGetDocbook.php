@@ -219,7 +219,6 @@ class SpecialGetDocbook extends SpecialPage {
 		$popts->enableLimitReport( false );
 		$popts->setIsPreview( false );
 		$popts->setIsSectionPreview( false );
-		$popts->setEditSection( false );
 
 		$book_contents .= '<bookinfo><title>' . $options['title'] . '</title>';
 		if ( !empty( $options['titleabbrev'] ) ) {
@@ -815,7 +814,7 @@ class SpecialGetDocbook extends SpecialPage {
 			return '';
 		}
 
-		$page_html = $parser_output->getText();
+		$page_html = $parser_output->getText( [ 'enableSectionEditLinks' => false ] );
 
 		$page_html = $this->recursiveFindSections( $wikipage, $page_html, 0, $chapter_container );
 
