@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"Joetaras"
+		]
+	},
+	"docbookexport-desc": "Aggiunge 'na funzione de analise <code><nowiki>{{#docbook:}}</nowiki></code> pe ccrejà 'nu DocBook da le paggène d'a uicchi scacchiate",
+	"getdocbook": "Pigghie DocBook",
+	"apihelp-getdocbook-summary": "Ccreje 'nu DocBook da 'na pàgene d'a uicchi"
+}
