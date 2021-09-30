@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"McDutchie"
+		]
+	},
+	"docbookexport-desc": "Adde un function <code><nowiki>{{#docbook:}}</nowiki></code> al analysator syntactic pro crear un DocBook a partir de paginas wiki seligite",
+	"getdocbook": "Obtener DocBook",
+	"apihelp-getdocbook-summary": "Crear un DocBook a partir de un pagina wiki"
+}
