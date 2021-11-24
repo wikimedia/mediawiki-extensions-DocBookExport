@@ -1,9 +1,10 @@
 {
 	"@metadata": {
 		"authors": [
-			"Fitoschido"
+			"Fitoschido",
+			"Jakeukalane"
 		]
 	},
 	"getdocbook": "Obtener DocBook",
-	"apihelp-getdocbook-summary": "Crear archivo DocBook a partir de una página del wiki"
+	"apihelp-getdocbook-summary": "Crear archivo DocBook a partir de una página de la wiki"
 }
