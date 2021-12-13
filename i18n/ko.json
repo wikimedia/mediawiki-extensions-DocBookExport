@@ -1,0 +1,9 @@
+{
+	"@metadata": {
+		"authors": [
+			"Ykhwong"
+		]
+	},
+	"getdocbook": "DocBook 가져오기",
+	"apihelp-getdocbook-summary": "위키 문서로부터 DocBook을 만듭니다"
+}
