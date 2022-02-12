@@ -13,7 +13,13 @@ class DocBookExport {
 	public static function parseDoocBookIndexParserExtension( $parser ) {
 		$options = self::extractOptions( array_slice( func_get_args(), 1 ) );
 		$group_by = $options['grouping'];
-        $parser->getOutput()->setProperty( 'docbook_index_group_by', $group_by );
+		$parserOutput = $parser->getOutput();
+		if ( method_exists( $parserOutput, 'setPageProperty' ) ) {
+			// MW 1.38
+			$parserOutput->setPageProperty( 'docbook_index_group_by', $group_by );
+		} else {
+			$parserOutput->setProperty( 'docbook_index_group_by', $group_by );
+		}
 		return '';
 	}
 
@@ -47,7 +53,13 @@ class DocBookExport {
 			$book_name .= '_' . $options['volumenum'];
 		}
 
-        $parser->getOutput()->setProperty( md5( 'docbook_' . $book_name ), $serialized );
+		$parserOutput = $parser->getOutput();
+		if ( method_exists( $parserOutput, 'setPageProperty' ) ) {
+			// MW 1.38
+			$parserOutput->setPageProperty( md5( 'docbook_' . $book_name ), $serialized );
+		} else {
+			$parserOutput->setProperty( md5( 'docbook_' . $book_name ), $serialized );
+		}
 		
 		$docbook_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Get Docbook - " . $book_name, [], [ 'embed_page' => $parser->getTitle()->getText(), 'bookname' => $book_name ] );
 
