@@ -1,0 +1,9 @@
+{
+	"@metadata": {
+		"authors": [
+			"StarrySky"
+		]
+	},
+	"getdocbook": "得到DocBook",
+	"apihelp-getdocbook-summary": "创建一个来自wiki页面的DocBook"
+}
