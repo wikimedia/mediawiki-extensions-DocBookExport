@@ -797,7 +797,12 @@ class SpecialGetDocbook extends SpecialPage {
 		$footnotes = array();
 
 		$titleObj = Title::newFromText( $wikipage );
-		$pageObj = new WikiPage( $titleObj );
+		if ( method_exists( MediaWikiServices::class, 'getWikiPageFactory' ) ) {
+			// MW 1.36+
+			$pageObj = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $titleObj );
+		} else {
+			$pageObj = new WikiPage( $titleObj );
+		}
 
 		$content = $pageObj->getContent( Revision::RAW );
 		if ( !$content ) {
