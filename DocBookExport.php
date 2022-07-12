@@ -1,4 +1,5 @@
 <?php
+use MediaWiki\MediaWikiServices;
 
 class DocBookExport {
 
@@ -47,7 +48,8 @@ class DocBookExport {
 		if ( $parser->getTitle() == null ) {
 			return "";
 		}
-        $serialized = serialize( $options );
+
+		$serialized = serialize( $options );
 		$book_name = str_replace( " ", "_", $options['title'] );
 		if ( !empty( $options['volumenum'] ) ) {
 			$book_name .= '_' . $options['volumenum'];
@@ -60,8 +62,15 @@ class DocBookExport {
 		} else {
 			$parserOutput->setProperty( md5( 'docbook_' . $book_name ), $serialized );
 		}
-		
-		$docbook_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Get Docbook - " . $book_name, [], [ 'embed_page' => $parser->getTitle()->getText(), 'bookname' => $book_name ] );
+
+		$linkRenderer = MediaWikiServices::getInstance()->getLinkRenderer();
+
+		$docbook_link = $linkRenderer->makeKnownLink(
+				Title::makeTitle( NS_SPECIAL, 'GetDocbook' ),
+				"Get Docbook - " . $book_name,
+				[],
+				[ 'embed_page' => $parser->getTitle()->getText(), 'bookname' => $book_name ]
+			);
 
 		$docbook_preview = '';
 
@@ -75,11 +84,17 @@ class DocBookExport {
 			$after_identifier = $parts[1];
 			list( $param_content, $parameters ) = SpecialGetDocbook::extractParametersInBrackets( $after_identifier );
 
-			$docbook_preview .= '<br>' . $identifier . " " . implode(
-				", ",
-				array_map( function( $pagename ) {
-					return Linker::linkKnown( Title::newFromText( $pagename ), $pagename );
-				}, explode( ',', $param_content ) )
+			$docbook_preview .= '<br>' . $identifier . " "
+				. implode(
+					", ",
+					array_map( function( $pagename ) use ( $linkRenderer ) {
+						return $linkRenderer->makeKnownLink(
+							Title::newFromText( $pagename ),
+							$pagename
+						);
+					},
+					explode( ',', $param_content )
+				)
 			);
 		}
 

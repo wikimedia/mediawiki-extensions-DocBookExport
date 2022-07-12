@@ -713,7 +713,12 @@ class SpecialGetDocbook extends SpecialPage {
 		$request = $this->getRequest();
 		$out = $this->getOutput();
 
-		$create_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Re-generate Docbook", ['id' => "create_docbook"], [ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'create' ] );
+		$create_link = $this->getLinkRenderer()->makeKnownLink(
+			Title::makeTitle( NS_SPECIAL, 'GetDocbook' ),
+			"Re-generate Docbook",
+			[ 'id' => 'create_docbook' ],
+			[ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'create' ]
+		);
 		$out->addHTML( "<p>$create_link (Requires upload to Docbook server. This may take a while)</p>" );
 	}
 
@@ -757,7 +762,12 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( $result['result'] == 'success' ) {
 			if ( !empty( $result['status'] ) ) {
 				$out->addHTML( "<p>Status: ". $result['status'] ."</p>" );
-				$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Refresh Status", [], [ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'check_status' ] );
+				$check_status_link = $this->getLinkRenderer()->makeKnownLink(
+					Title::makeTitle( NS_SPECIAL, 'GetDocbook' ),
+					'Refresh Status',
+					[],
+					[ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'check_status' ]
+				);
 				$out->addHTML( "<p>$check_status_link</p>" );
 				if ( strpos( $result['status'], "Docbook generated" ) !== FALSE ) {
 					$out->addHTML( '<a href="'. $wgDocbookDownloadServerPath . $result['docbook_zip'] .'">Download XML</a><br>' );
@@ -766,7 +776,12 @@ class SpecialGetDocbook extends SpecialPage {
 					$out->addHTML( '<a href="'. $wgDocbookDownloadServerPath . $result['docbook_odf'] .'">Download ODF</a><br>' );
 				}
 			} else {
-				$check_status_link = Linker::linkKnown( Title::makeTitle(NS_SPECIAL, 'GetDocbook'), "Check Status", [], [ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'check_status' ] );
+				$check_status_link = $this->getLinkRenderer()->makeKnownLink(
+					Title::makeTitle( NS_SPECIAL, 'GetDocbook' ),
+					'Check Status',
+					[],
+					[ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'check_status' ]
+				);
 				$out->addHTML( "<p>Successfully Sent Request. $check_status_link</p>" );
 			}
 		} else if ( $result['result'] == 'failed' ) {
