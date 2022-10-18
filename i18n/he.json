@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"Amire80"
+		]
+	},
+	"docbookexport-desc": "הוספת פונקציית מפענח <code dir=\"ltr\"><nowiki>{{#docbook:}}</nowiki></code> ליצירת DocBook מדפי ויקי נבחרים",
+	"getdocbook": "קבלת DocBook",
+	"apihelp-getdocbook-summary": "יצירת DocBook מדף ויקי"
+}
