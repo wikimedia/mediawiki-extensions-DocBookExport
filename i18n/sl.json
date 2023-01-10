@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"Eleassar"
+		]
+	},
+	"docbookexport-desc": "Ddoa funkcijo razčlenjevalnika <code><nowiki>{{#docbook:}}</nowiki></code> za ustvaritev knjige DocBook iz izbranih viki strani.",
+	"getdocbook": "Pridobi DocBook",
+	"apihelp-getdocbook-summary": "Ustvarite DocBook iz viki strani"
+}
