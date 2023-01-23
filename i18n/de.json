@@ -1,9 +1,11 @@
 {
 	"@metadata": {
 		"authors": [
-			"Ameisenigel"
+			"Ameisenigel",
+			"Justman10000"
 		]
 	},
+	"docbookexport-desc": "Fügt <code><nowiki>{{#docbook:}}</nowiki></code> Parserfunktion hinzu, um ein DocBook aus ausgewählten Wikiseiten zu erstellen",
 	"getdocbook": "DocBook generieren",
 	"apihelp-getdocbook-summary": "DocBook aus einer Wikiseite erstellen"
 }
