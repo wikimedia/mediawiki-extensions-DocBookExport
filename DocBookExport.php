@@ -3,6 +3,10 @@ use MediaWiki\MediaWikiServices;
 
 class DocBookExport {
 
+	/**
+	 * @param Parser &$parser
+	 * @return true
+	 */
 	public static function onParserSetup( Parser &$parser ) {
 		$parser->setHook( 'docbook', 'DocBookExport::parseDocBookSyntaxTagExtension' );
 		$parser->setHook( 'footnote', 'DocBookExport::parseFootNoteSyntaxTagExtension' );
@@ -11,7 +15,11 @@ class DocBookExport {
 		return true;
 	}
 
-	public static function parseDoocBookIndexParserExtension( $parser ) {
+	/**
+	 * @param Parser $parser
+	 * @return string
+	 */
+	public static function parseDoocBookIndexParserExtension( Parser $parser ) {
 		$options = self::extractOptions( array_slice( func_get_args(), 1 ) );
 		$group_by = $options['grouping'];
 		$parserOutput = $parser->getOutput();
@@ -24,27 +32,48 @@ class DocBookExport {
 		return '';
 	}
 
-	public static function parseDocBookSyntaxParserFunction( &$parser ) {
+	/**
+	 * @param Parser &$parser
+	 * @return array
+	 */
+	public static function parseDocBookSyntaxParserFunction( Parser &$parser ) {
 		$options = self::extractOptions( array_slice( func_get_args(), 1 ) );
-		return array( self::parseDocBookSyntax( $parser, $options ), 'noparse' => true, 'isHTML' => true );
+		return [ self::parseDocBookSyntax( $parser, $options ), 'noparse' => true, 'isHTML' => true ];
 	}
 
-	public static function parseFootNoteSyntaxTagExtension( $input, array $args, Parser $parser, PPFrame $frame ) {
+	/**
+	 * @param string $input
+	 * @param array $args
+	 * @param Parser $parser
+	 * @param PPFrame $frame
+	 * @return string
+	 */
+	public static function parseFootNoteSyntaxTagExtension( string $input, array $args, Parser $parser, PPFrame $frame ) {
 		if ( empty( $input ) ) {
-			return '<a class="footnoteref" id="'. $args['name'] .'" href=""></a>';
+			return '<a class="footnoteref" id="' . $args['name'] . '" href=""></a>';
 		} else {
-			return '<a class="footnote" id="'. $args['name'] .'" href="'. $parser->recursiveTagParse( $input, $frame ) .'">'. $parser->recursiveTagParse( $input, $frame ) .'</a>';
+			return '<a class="footnote" id="' . $args['name'] . '" href="' . $parser->recursiveTagParse( $input, $frame ) . '">' . $parser->recursiveTagParse( $input, $frame ) . '</a>';
 		}
 	}
 
-	public static function parseDocBookSyntaxTagExtension( $input, array $args, Parser $parser, PPFrame $frame ) {
+	/**
+	 * @param string $input
+	 * @param array $args
+	 * @param Parser $parser
+	 * @param PPFrame $frame
+	 * @return string
+	 */
+	public static function parseDocBookSyntaxTagExtension( string $input, array $args, Parser $parser, PPFrame $frame ) {
 		$args['page structure'] = $input;
 		return self::parseDocBookSyntax( $parser, $args );
 	}
 
-	public static function parseDocBookSyntax( &$parser, $options ) {
-		global $wgScriptPath;
-
+	/**
+	 * @param Parser &$parser
+	 * @param array $options
+	 * @return string
+	 */
+	public static function parseDocBookSyntax( Parser &$parser, array $options ) {
 		if ( $parser->getTitle() == null ) {
 			return "";
 		}
@@ -75,7 +104,7 @@ class DocBookExport {
 		$docbook_preview = '';
 
 		$page_structure = explode( "\n", $options['page structure'] );
-		foreach( $page_structure as $current_line ) {
+		foreach ( $page_structure as $current_line ) {
 			$parts = explode( ' ', $current_line, 2 );
 			if ( count( $parts ) < 2 ) {
 				continue;
@@ -87,7 +116,7 @@ class DocBookExport {
 			$docbook_preview .= '<br>' . $identifier . " "
 				. implode(
 					", ",
-					array_map( function( $pagename ) use ( $linkRenderer ) {
+					array_map( static function ( $pagename ) use ( $linkRenderer ) {
 						return $linkRenderer->makeKnownLink(
 							Title::newFromText( $pagename ),
 							$pagename
@@ -101,8 +130,12 @@ class DocBookExport {
 		return $docbook_link . '<br><h3>Content</h3>' . $docbook_preview;
 	}
 
+	/**
+	 * @param array $options
+	 * @return array
+	 */
 	public static function extractOptions( array $options ) {
-		$results = array();
+		$results = [];
 
 		foreach ( $options as $option ) {
 			$pair = explode( '=', $option, 2 );
@@ -121,5 +154,3 @@ class DocBookExport {
 	}
 
 }
-
-?>

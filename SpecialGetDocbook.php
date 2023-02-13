@@ -8,13 +8,17 @@ class SpecialGetDocbook extends SpecialPage {
 		parent::__construct( 'GetDocbook', 'getdocbook' );
 	}
 
+	/** @var string */
 	private $embed_page = '';
+
+	/** @var string */
 	private $bookname = '';
 
+	/** @var string[] */
 	private $section_levels = [ "h1", "h2", "h3", "h4", "h5", "h6" ];
 
 	function execute( $query ) {
-		global $wgServer, $wgScriptPath, $wgDocbookExportPandocServerPath, $wgDocBookExportXSLRepository, $wgDocBookExportImportXSLRepoPathPDF;
+		global $wgDocbookExportPandocServerPath, $wgDocBookExportXSLRepository, $wgDocBookExportImportXSLRepoPathPDF;
 
 		$this->setHeaders();
 		$request = $this->getRequest();
@@ -34,7 +38,7 @@ class SpecialGetDocbook extends SpecialPage {
 		$dbr = wfGetDB( DB_REPLICA );
 		$propValue = $dbr->selectField( 'page_props', // table to use
 			'pp_value', // Field to select
-			array( 'pp_page' => $title->getArticleID(), 'pp_propname' => md5( "docbook_" . $this->bookname ) ), // where conditions
+			[ 'pp_page' => $title->getArticleID(), 'pp_propname' => md5( "docbook_" . $this->bookname ) ], // where conditions
 			__METHOD__
 		);
 
@@ -47,6 +51,7 @@ class SpecialGetDocbook extends SpecialPage {
 			return;
 		}
 
+		// phpcs:ignore MediaWiki.Usage.ForbiddenFunctions.escapeshellcmd
 		$docbook_folder = escapeshellcmd( str_replace( ' ', '_', $options['title'] ) );
 		if ( !empty( $options['volumenum'] ) ) {
 			$docbook_folder .= '_' . $options['volumenum'];
@@ -59,7 +64,7 @@ class SpecialGetDocbook extends SpecialPage {
 			return;
 		}
 
-		$out->addHTML( "<span class='mw-headline'><h3>". str_replace( "_", " ", $this->bookname ) ."</h3></span>" );
+		$out->addHTML( "<span class='mw-headline'><h3>" . str_replace( "_", " ", $this->bookname ) . "</h3></span>" );
 
 		if ( $request->getVal( 'action' ) == "check_status" ) {
 			return $this->getDocbookStatus( $docbook_folder );
@@ -73,15 +78,15 @@ class SpecialGetDocbook extends SpecialPage {
 		$book_contents = '<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 		<book lang="en">';
 
-		$all_files = array();
-		$index_terms = array();
+		$all_files = [];
+		$index_terms = [];
 		if ( array_key_exists( 'index terms', $options ) ) {
-			foreach( explode( ",", $options['index terms'] ) as $index ) {
+			foreach ( explode( ",", $options['index terms'] ) as $index ) {
 				$index_data = [];
 				$index_title = Title::newFromText( $index );
 				$propValue = $dbr->selectField( 'page_props', // table to use
 					'pp_value', // Field to select
-					array( 'pp_page' => $index_title->getArticleID(), 'pp_propname' => "docbook_index_group_by" ), // where conditions
+					[ 'pp_page' => $index_title->getArticleID(), 'pp_propname' => "docbook_index_group_by" ], // where conditions
 					__METHOD__
 				);
 				if ( $propValue !== false ) {
@@ -91,26 +96,26 @@ class SpecialGetDocbook extends SpecialPage {
 			}
 		}
 
-		$index_categories = array();
+		$index_categories = [];
 		if ( array_key_exists( 'index term categories', $options ) ) {
 			$index_categories = self::smartSplit( ",", $options['index term categories'] );
 		}
 
-		foreach( $index_categories as $index_category ) {
+		foreach ( $index_categories as $index_category ) {
 			$parts = explode( '(', $index_category );
 			$category_name = $parts[0];
 			$categoryMembers = Category::newFromName( trim( $category_name ) )->getMembers();
 
-			$line_props = array();
+			$line_props = [];
 			if ( count( $parts ) > 1 ) {
 				$line_props = explode( ')', $parts[1] )[0];
-				$chunks = array_chunk(preg_split('/(=|,)/', $line_props), 2); // See https://stackoverflow.com/a/32768029/1150075
-				$line_props = array_combine(array_column($chunks, 0), array_column($chunks, 1));
-				$a = array_map('trim', array_keys($line_props));
-				$b = array_map('trim', $line_props);
-				$line_props = array_combine($a, $b);
+				$chunks = array_chunk( preg_split( '/(=|,)/', $line_props ), 2 ); // See https://stackoverflow.com/a/32768029/1150075
+				$line_props = array_combine( array_column( $chunks, 0 ), array_column( $chunks, 1 ) );
+				$a = array_map( 'trim', array_keys( $line_props ) );
+				$b = array_map( 'trim', $line_props );
+				$line_props = array_combine( $a, $b );
 			}
-			foreach( $categoryMembers as $categoryMember ) {
+			foreach ( $categoryMembers as $categoryMember ) {
 				$index_title = $categoryMember;
 				$index_data = [];
 				$grouping_property = '';
@@ -125,7 +130,7 @@ class SpecialGetDocbook extends SpecialPage {
 							$value = array_shift( $values );
 							if ( $value->getDIType() == SMWDataItem::TYPE_BLOB ) {
 								$index_title = Title::newFromText( $value->getString() );
-							} else if ( $value->getDIType() == SMWDataItem::TYPE_WIKIPAGE ) {
+							} elseif ( $value->getDIType() == SMWDataItem::TYPE_WIKIPAGE ) {
 								$index_title = $value->getTitle();
 							}
 						}
@@ -146,7 +151,7 @@ class SpecialGetDocbook extends SpecialPage {
 							$value = array_shift( $values );
 							if ( $value->getDIType() == SMWDataItem::TYPE_BLOB ) {
 								$index_data = [ 'primary' => $value->getString() ];
-							} else if ( $value->getDIType() == SMWDataItem::TYPE_WIKIPAGE ) {
+							} elseif ( $value->getDIType() == SMWDataItem::TYPE_WIKIPAGE ) {
 								$index_data = [ 'primary' => $value->getTitle()->getText() ];
 							}
 						} else {
@@ -157,7 +162,7 @@ class SpecialGetDocbook extends SpecialPage {
 				if ( empty( $grouping_property ) ) {
 					$propValue = $dbr->selectField( 'page_props', // table to use
 						'pp_value', // Field to select
-						array( 'pp_page' => $categoryMember->getArticleID(), 'pp_propname' => "docbook_index_group_by" ), // where conditions
+						[ 'pp_page' => $categoryMember->getArticleID(), 'pp_propname' => "docbook_index_group_by" ], // where conditions
 						__METHOD__
 					);
 					if ( $propValue !== false ) {
@@ -167,8 +172,8 @@ class SpecialGetDocbook extends SpecialPage {
 				$index_terms[$index_title->getText()] = $index_data;
 			}
 		}
-		$index_terms_capitalized = array();
-		foreach( $index_terms as $index_term => $index_data ) {
+		$index_terms_capitalized = [];
+		foreach ( $index_terms as $index_term => $index_data ) {
 			if ( ucfirst( $index_term ) != $index_term ) {
 				$index_terms_capitalized[ucfirst( $index_term )] = $index_data;
 			} else {
@@ -203,7 +208,7 @@ class SpecialGetDocbook extends SpecialPage {
 				$file_path = $repoGroup->findFile( basename( $options['xsl_import'] ) )->getLocalRefPath();
 				$all_files[] = $file_path;
 			}
-		} else if ( !empty( $wgDocBookExportXSLRepository ) ) {
+		} elseif ( !empty( $wgDocBookExportXSLRepository ) ) {
 			if ( !file_put_contents( "$uploadDir/$docbook_folder/xsl_repository.json", json_encode( [ "DocBookExportXSLRepository" => $wgDocBookExportXSLRepository ] ) ) ) {
 				$out->wrapWikiMsg(
 					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
@@ -233,7 +238,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( !empty( $options['productname'] ) ) {
 			list( $param_content, $parameters ) = self::extractParametersInBrackets( $options['productname'] );
 			if ( array_key_exists( 'class', $parameters ) ) {
-				$book_contents .= '<productname class="'. $parameters['class'] .'">' . $param_content . '</productname>';
+				$book_contents .= '<productname class="' . $parameters['class'] . '">' . $param_content . '</productname>';
 			} else {
 				$book_contents .= '<productname>' . $param_content . '</productname>';
 			}
@@ -241,7 +246,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( !empty( $options['biblioid'] ) ) {
 			list( $param_content, $parameters ) = self::extractParametersInBrackets( $options['biblioid'] );
 			if ( array_key_exists( 'class', $parameters ) ) {
-				$book_contents .= '<biblioid class="'. $parameters['class'] .'">' . $param_content . '</biblioid>';
+				$book_contents .= '<biblioid class="' . $parameters['class'] . '">' . $param_content . '</biblioid>';
 			} else {
 				$book_contents .= '<biblioid>' . $param_content . '</biblioid>';
 			}
@@ -252,8 +257,8 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( !empty( $options['revhistory'] ) ) {
 			$book_contents .= '<revhistory>';
 			$history_info_parts = explode( ',', $options['revhistory'] );
-			foreach( $history_info_parts as $key => $history_info_part ) {
-				if ( $key%2 == 0 ) {
+			foreach ( $history_info_parts as $key => $history_info_part ) {
+				if ( $key % 2 == 0 ) {
 					$book_contents .= '<revision><revnumber>' . $history_info_part . '</revnumber>';
 				} else {
 					$book_contents .= '<date>' . $history_info_part . '</date></revision>';
@@ -268,7 +273,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( !empty( $options['keywordset'] ) ) {
 			$book_contents .= '<keywordset>';
 			$keywordset_keywords = explode( ',', $options['keywordset'] );
-			foreach( $keywordset_keywords as $key => $keywordset_keyword ) {
+			foreach ( $keywordset_keywords as $key => $keywordset_keyword ) {
 				$book_contents .= '<keyword>' . $keywordset_keyword . '</keyword>';
 			}
 			$book_contents .= '</keywordset>';
@@ -276,7 +281,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( !empty( $options['subjectset'] ) ) {
 			$book_contents .= '<subjectset>';
 			$keywordset_keywords = explode( ',', $options['subjectset'] );
-			foreach( $keywordset_keywords as $key => $keywordset_keyword ) {
+			foreach ( $keywordset_keywords as $key => $keywordset_keyword ) {
 				$book_contents .= '<subject><subjectterm>' . $keywordset_keyword . '</subjectterm></subject>';
 			}
 			$book_contents .= '</subjectset>';
@@ -293,7 +298,7 @@ class SpecialGetDocbook extends SpecialPage {
 			$book_contents .= '
 				<mediaobject>
 				  <imageobject>
-					<imagedata fileref="'. $file_path .'" contentwidth="9cm"/>
+					<imagedata fileref="' . $file_path . '" contentwidth="9cm"/>
 				  </imageobject>
 				</mediaobject>
 			';
@@ -356,7 +361,7 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		if ( array_key_exists( 'section_autolabel_max_depth', $options ) ) {
-			$xsl_customization .= '<xsl:param name="section.autolabel.max.depth">'. $options['section_autolabel_max_depth'] .'</xsl:param>';
+			$xsl_customization .= '<xsl:param name="section.autolabel.max.depth">' . $options['section_autolabel_max_depth'] . '</xsl:param>';
 		}
 
 		if ( array_key_exists( 'external_link_color', $options ) ) {
@@ -364,7 +369,7 @@ class SpecialGetDocbook extends SpecialPage {
 <xsl:attribute-set name="xref.properties">
 	<xsl:attribute name="color">
 		<xsl:choose>
-			<xsl:when test="self::link and @xlink:href">'. $options['external_link_color'] .'</xsl:when>
+			<xsl:when test="self::link and @xlink:href">' . $options['external_link_color'] . '</xsl:when>
 			<xsl:otherwise>black</xsl:otherwise>
 		</xsl:choose>
 	</xsl:attribute>
@@ -373,51 +378,51 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		if ( array_key_exists( 'orientation', $options ) ) {
-			$xsl_customization .= '<xsl:param name="page.orientation">'. $options['orientation'] .'</xsl:param>';
+			$xsl_customization .= '<xsl:param name="page.orientation">' . $options['orientation'] . '</xsl:param>';
 		}
 
 		if ( array_key_exists( 'size', $options ) ) {
-			$xsl_customization .= '<xsl:param name="paper.type">'. $options['size'] .'</xsl:param>';
+			$xsl_customization .= '<xsl:param name="paper.type">' . $options['size'] . '</xsl:param>';
 		}
 
 		if ( array_key_exists( 'columns', $options ) ) {
-			$xsl_customization .= '<xsl:param name="column.count.body" select="'. $options['columns'] .'"></xsl:param>';
+			$xsl_customization .= '<xsl:param name="column.count.body" select="' . $options['columns'] . '"></xsl:param>';
 		}
 
 		if ( array_key_exists( 'margin-inner', $options ) ) {
-			$xsl_customization .= '<xsl:param name="page.margin.inner">'. $options['margin-inner'] .'</xsl:param>';
+			$xsl_customization .= '<xsl:param name="page.margin.inner">' . $options['margin-inner'] . '</xsl:param>';
 		}
 		if ( array_key_exists( 'margin-outer', $options ) ) {
-			$xsl_customization .= '<xsl:param name="page.margin.outer">'. $options['margin-outer'] .'</xsl:param>';
+			$xsl_customization .= '<xsl:param name="page.margin.outer">' . $options['margin-outer'] . '</xsl:param>';
 		}
 		if ( array_key_exists( 'margin-top', $options ) ) {
-			$xsl_customization .= '<xsl:param name="page.margin.top">'. $options['margin-top'] .'</xsl:param>';
+			$xsl_customization .= '<xsl:param name="page.margin.top">' . $options['margin-top'] . '</xsl:param>';
 		}
 		if ( array_key_exists( 'margin-bottom', $options ) ) {
-			$xsl_customization .= '<xsl:param name="page.margin.bottom">'. $options['margin-bottom'] .'</xsl:param>';
+			$xsl_customization .= '<xsl:param name="page.margin.bottom">' . $options['margin-bottom'] . '</xsl:param>';
 		}
 
 		if ( array_key_exists( 'body.font.family', $options ) ) {
-			$xsl_customization .= '<xsl:param name="body.font.family">'. $options['body.font.family'] .'</xsl:param>';
+			$xsl_customization .= '<xsl:param name="body.font.family">' . $options['body.font.family'] . '</xsl:param>';
 		}
 		if ( array_key_exists( 'body.font.size', $options ) ) {
-			$xsl_customization .= '<xsl:param name="body.font.size">'. $options['body.font.size'] .'</xsl:param>';
+			$xsl_customization .= '<xsl:param name="body.font.size">' . $options['body.font.size'] . '</xsl:param>';
 		}
 
 		if ( array_key_exists( 'title.font.family', $options ) ) {
-			$xsl_customization .= '<xsl:param name="title.font.family">'. $options['title.font.family'] .'</xsl:param>';
+			$xsl_customization .= '<xsl:param name="title.font.family">' . $options['title.font.family'] . '</xsl:param>';
 		}
 
 		if ( array_key_exists( 'footnote.font.family', $options ) ) {
 			$xsl_customization .= '
 <xsl:attribute-set name="footnote.properties">
-	<xsl:attribute name="font-family">'. $options['footnote.font.family'] .'</xsl:attribute>
+	<xsl:attribute name="font-family">' . $options['footnote.font.family'] . '</xsl:attribute>
 </xsl:attribute-set>
 			';
 		}
 
 		if ( array_key_exists( 'footnote.font.size', $options ) ) {
-			$xsl_customization .= '<xsl:param name="footnote.font.size">'. $options['footnote.font.size'] .'</xsl:param>';
+			$xsl_customization .= '<xsl:param name="footnote.font.size">' . $options['footnote.font.size'] . '</xsl:param>';
 		}
 
 		$xsl_contents = str_replace( "CUSTOMIZED_XSL_PLACEHOLDER", $xsl_customization, $xsl_contents );
@@ -434,7 +439,7 @@ class SpecialGetDocbook extends SpecialPage {
 		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template.xsl' );
 		if ( array_key_exists( 'xsl_import_path', $options ) ) {
 			$xsl_contents = str_replace( 'docbookexport_template_override.xsl', $options['xsl_import_path'], $xsl_contents );
-		} else if ( !empty( $wgDocBookExportImportXSLRepoPathPDF ) ) {
+		} elseif ( !empty( $wgDocBookExportImportXSLRepoPathPDF ) ) {
 			$xsl_contents = str_replace( 'docbookexport_template_override.xsl', $wgDocBookExportImportXSLRepoPathPDF, $xsl_contents );
 		}
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport.xsl", $xsl_contents ) ) {
@@ -458,7 +463,6 @@ class SpecialGetDocbook extends SpecialPage {
 			$all_files[] = "$uploadDir/$docbook_folder/docbookexport_template_override.xsl";
 		}
 
-
 		$pagenumberprefixes = file_get_contents( __DIR__ . '/pagenumberprefixes.xsl' );
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/pagenumberprefixes.xsl", $pagenumberprefixes ) ) {
 			$out->wrapWikiMsg(
@@ -481,11 +485,11 @@ class SpecialGetDocbook extends SpecialPage {
 			$all_files[] = "$uploadDir/$docbook_folder/docbookexport_styles.css";
 		}
 
-		$close_tags = array();
+		$close_tags = [];
 		$deep_level = 0;
 		$page_structure = explode( "\n", $options['page structure'] );
 		$content_started = false;
-		foreach( $page_structure as $current_line ) {
+		foreach ( $page_structure as $current_line ) {
 			$display_pagename = '';
 			$custom_header = '';
 			$parts = explode( ' ', $current_line, 2 );
@@ -504,19 +508,19 @@ class SpecialGetDocbook extends SpecialPage {
 				$display_pagename = $parameters['title'];
 			}
 			if ( array_key_exists( 'header', $parameters ) ) {
-				$custom_header .= ' header="' . $parameters['header']. '"';
+				$custom_header .= ' header="' . $parameters['header'] . '"';
 			}
 			if ( array_key_exists( 'header_right', $parameters ) ) {
-				$custom_header .= ' header_right="' . $parameters['header_right']. '"';
+				$custom_header .= ' header_right="' . $parameters['header_right'] . '"';
 			}
 			if ( array_key_exists( 'header_left', $parameters ) ) {
-				$custom_header .= ' header_left="' . $parameters['header_left']. '"';
+				$custom_header .= ' header_left="' . $parameters['header_left'] . '"';
 			}
 			if ( array_key_exists( 'footer_right', $parameters ) ) {
-				$custom_header .= ' footer_right="' . $parameters['footer_right']. '"';
+				$custom_header .= ' footer_right="' . $parameters['footer_right'] . '"';
 			}
 			if ( array_key_exists( 'footer_left', $parameters ) ) {
-				$custom_header .= ' footer_left="' . $parameters['footer_left']. '"';
+				$custom_header .= ' footer_left="' . $parameters['footer_left'] . '"';
 			}
 			if ( array_key_exists( 'orientation', $parameters ) && $parameters['orientation'] == "landscape" ) {
 				$orientation_mode = ' role="landscape"';
@@ -530,7 +534,7 @@ class SpecialGetDocbook extends SpecialPage {
 			if ( $identifier == '+' ) {
 				$chapter_container = true;
 				$this_level = $deep_level;
-				while( $this_level >= 0 ) {
+				while ( $this_level >= 0 ) {
 					if ( array_key_exists( $this_level, $close_tags ) ) {
 						$book_contents .= $close_tags[$this_level];
 						$close_tags[$this_level] = '';
@@ -541,9 +545,9 @@ class SpecialGetDocbook extends SpecialPage {
 					$book_contents .= '<toc/>';
 				}
 				$content_started = true;
-			} else if ( $identifier == '*' ) {
+			} elseif ( $identifier == '*' ) {
 				$this_level = $deep_level;
-				while( $this_level >= 0 ) {
+				while ( $this_level >= 0 ) {
 					if ( array_key_exists( $this_level, $close_tags ) ) {
 						$book_contents .= $close_tags[$this_level];
 						$close_tags[$this_level] = '';
@@ -556,40 +560,40 @@ class SpecialGetDocbook extends SpecialPage {
 				}
 				$content_started = true;
 
-				$book_contents .= '<chapter'. $orientation_mode .'>';
+				$book_contents .= '<chapter' . $orientation_mode . '>';
 				if ( !array_key_exists( 0, $close_tags ) ) {
 					$close_tags[0] = '';
 				}
 				$close_tags[0] .= '</chapter>';
-			} else if ( $identifier[0] == '*' ) {
+			} elseif ( $identifier[0] == '*' ) {
 				$indent_level = strlen( $identifier ) - 1;
 				$deep_level = max( $deep_level, $indent_level );
 				$this_level = $deep_level;
-				while( $this_level >= $indent_level ) {
+				while ( $this_level >= $indent_level ) {
 					if ( array_key_exists( $this_level, $close_tags ) ) {
 						$book_contents .= $close_tags[$this_level];
 						$close_tags[$this_level] = '';
 					}
 					$this_level--;
 				}
-				$book_contents .= '<section'. $orientation_mode .'>';
+				$book_contents .= '<section' . $orientation_mode . '>';
 				if ( !array_key_exists( $indent_level, $close_tags ) ) {
 					$close_tags[$indent_level] = '';
 				}
 				$close_tags[$indent_level] .= '</section>';
-			} else if ( $identifier == '?' ) {
+			} elseif ( $identifier == '?' ) {
 				$this_level = $deep_level;
-				while($this_level >= 0) {
-					if (array_key_exists($this_level, $close_tags)) {
+				while ( $this_level >= 0 ) {
+					if ( array_key_exists( $this_level, $close_tags ) ) {
 						$book_contents .= $close_tags[$this_level];
 						$close_tags[$this_level] = '';
 					}
 					$this_level--;
 				}
 				if ( !$content_started ) {
-					$book_contents .= '<preface'. $orientation_mode .'>';
+					$book_contents .= '<preface' . $orientation_mode . '>';
 				} else {
-					$book_contents .= '<appendix'. $orientation_mode .'>';
+					$book_contents .= '<appendix' . $orientation_mode . '>';
 				}
 				if ( !array_key_exists( 0, $close_tags ) ) {
 					$close_tags[0] = '';
@@ -606,7 +610,7 @@ class SpecialGetDocbook extends SpecialPage {
 			if ( !$chapter_container ) {
 				$book_contents .= "<title$custom_header>$display_pagename</title>";
 			}
-			foreach( $wiki_pages as $wikipage ) {
+			foreach ( $wiki_pages as $wikipage ) {
 				$titleObj = Title::newFromText( $wikipage );
 				if ( $titleObj == null || !$titleObj->exists() ) {
 					$out->wrapWikiMsg(
@@ -619,8 +623,8 @@ class SpecialGetDocbook extends SpecialPage {
 			}
 		}
 		$this_level = $deep_level;
-		while($this_level >= 0) {
-			if (array_key_exists($this_level, $close_tags)) {
+		while ( $this_level >= 0 ) {
+			if ( array_key_exists( $this_level, $close_tags ) ) {
 				$book_contents .= $close_tags[$this_level];
 				$close_tags[$this_level] = '';
 			}
@@ -659,30 +663,30 @@ class SpecialGetDocbook extends SpecialPage {
 		];
 
 		// Create array of files to post
-		foreach ($all_files as $index => $file) {
+		foreach ( $all_files as $index => $file ) {
 			$postData['files[' . $index . ']'] = curl_file_create(
-				realpath($file),
-				mime_content_type($file),
-				basename($file)
+				realpath( $file ),
+				mime_content_type( $file ),
+				basename( $file )
 			);
 		}
 
 		$request = curl_init( $wgDocbookExportPandocServerPath . '/wikiHtmlToDocbookConvertor.php' );
-		curl_setopt($request, CURLOPT_POST, true);
-		curl_setopt($request, CURLOPT_POSTFIELDS, $postData);
-		curl_setopt($request, CURLOPT_RETURNTRANSFER, true);
-		$result = curl_exec($request);
+		curl_setopt( $request, CURLOPT_POST, true );
+		curl_setopt( $request, CURLOPT_POSTFIELDS, $postData );
+		curl_setopt( $request, CURLOPT_RETURNTRANSFER, true );
+		$result = curl_exec( $request );
 
-		if ($result === false) {
+		if ( $result === false ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Error: " . curl_error($request)
+				"Error: " . curl_error( $request )
 			);
 			return;
 		}
 
-		$httpcode = curl_getinfo($request, CURLINFO_HTTP_CODE);
-		curl_close($request);
+		$httpcode = curl_getinfo( $request, CURLINFO_HTTP_CODE );
+		curl_close( $request );
 
 		$result = json_decode( $result, true );
 		$this->processResponse( $httpcode, $result );
@@ -690,12 +694,12 @@ class SpecialGetDocbook extends SpecialPage {
 
 	protected function checkForErrors( $book_contents ) {
 		$dom = new DOMDocument();
-		libxml_use_internal_errors(true);
-		$dom->loadHtml( $book_contents, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+		libxml_use_internal_errors( true );
+		$dom->loadHtml( $book_contents, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
 		libxml_clear_errors();
 
 		$anchor_ids = [];
-		foreach( $dom->getElementsByTagName( 'span' ) as $span ) {
+		foreach ( $dom->getElementsByTagName( 'span' ) as $span ) {
 			if ( $span->hasAttribute( 'id' ) ) {
 				$span_id = $span->getAttribute( 'id' );
 				if ( in_array( $span_id, $anchor_ids ) ) {
@@ -736,20 +740,20 @@ class SpecialGetDocbook extends SpecialPage {
 		];
 
 		$request = curl_init( $wgDocbookExportPandocServerPath . '/wikiHtmlToDocbookConvertor.php' );
-		curl_setopt($request, CURLOPT_POST, true);
-		curl_setopt($request, CURLOPT_POSTFIELDS, $postData);
-		curl_setopt($request, CURLOPT_RETURNTRANSFER, true);
-		$result = curl_exec($request);
+		curl_setopt( $request, CURLOPT_POST, true );
+		curl_setopt( $request, CURLOPT_POSTFIELDS, $postData );
+		curl_setopt( $request, CURLOPT_RETURNTRANSFER, true );
+		$result = curl_exec( $request );
 
-		if ($result === false) {
+		if ( $result === false ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Error: " . curl_error($request)
+				"Error: " . curl_error( $request )
 			);
 			return;
 		}
-		$httpcode = curl_getinfo($request, CURLINFO_HTTP_CODE);
-		curl_close($request);
+		$httpcode = curl_getinfo( $request, CURLINFO_HTTP_CODE );
+		curl_close( $request );
 
 		$result = json_decode( $result, true );
 		$this->processResponse( $httpcode, $result );
@@ -761,7 +765,7 @@ class SpecialGetDocbook extends SpecialPage {
 		$out = $this->getOutput();
 		if ( $result['result'] == 'success' ) {
 			if ( !empty( $result['status'] ) ) {
-				$out->addHTML( "<p>Status: ". $result['status'] ."</p>" );
+				$out->addHTML( "<p>Status: " . $result['status'] . "</p>" );
 				$check_status_link = $this->getLinkRenderer()->makeKnownLink(
 					Title::makeTitle( NS_SPECIAL, 'GetDocbook' ),
 					'Refresh Status',
@@ -769,11 +773,11 @@ class SpecialGetDocbook extends SpecialPage {
 					[ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'check_status' ]
 				);
 				$out->addHTML( "<p>$check_status_link</p>" );
-				if ( strpos( $result['status'], "Docbook generated" ) !== FALSE ) {
-					$out->addHTML( '<a href="'. $wgDocbookDownloadServerPath . $result['docbook_zip'] .'">Download XML</a><br>' );
-					$out->addHTML( '<a href="'. $wgDocbookDownloadServerPath . $result['docbook_html'] .'">Download HTML</a><br>' );
-					$out->addHTML( '<a href="'. $wgDocbookDownloadServerPath . $result['docbook_pdf'] .'">Download PDF</a><br>' );
-					$out->addHTML( '<a href="'. $wgDocbookDownloadServerPath . $result['docbook_odf'] .'">Download ODF</a><br>' );
+				if ( strpos( $result['status'], "Docbook generated" ) !== false ) {
+					$out->addHTML( '<a href="' . $wgDocbookDownloadServerPath . $result['docbook_zip'] . '">Download XML</a><br>' );
+					$out->addHTML( '<a href="' . $wgDocbookDownloadServerPath . $result['docbook_html'] . '">Download HTML</a><br>' );
+					$out->addHTML( '<a href="' . $wgDocbookDownloadServerPath . $result['docbook_pdf'] . '">Download PDF</a><br>' );
+					$out->addHTML( '<a href="' . $wgDocbookDownloadServerPath . $result['docbook_odf'] . '">Download ODF</a><br>' );
 				}
 			} else {
 				$check_status_link = $this->getLinkRenderer()->makeKnownLink(
@@ -784,14 +788,14 @@ class SpecialGetDocbook extends SpecialPage {
 				);
 				$out->addHTML( "<p>Successfully Sent Request. $check_status_link</p>" );
 			}
-		} else if ( $result['result'] == 'failed' ) {
+		} elseif ( $result['result'] == 'failed' ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 				$result['error']
 			);
 		} else {
 			if ( $httpcode == 200 ) {
-				$out->addHTML( "<p>Status: ". $result['status'] ."</p>" );
+				$out->addHTML( "<p>Status: " . $result['status'] . "</p>" );
 				$out->wrapWikiMsg(
 					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
 					"Docbook was never generated!"
@@ -809,7 +813,7 @@ class SpecialGetDocbook extends SpecialPage {
 		global $wgServer;
 
 		$placeholderId = 0;
-		$footnotes = array();
+		$footnotes = [];
 
 		$titleObj = Title::newFromText( $wikipage );
 		if ( method_exists( MediaWikiServices::class, 'getWikiPageFactory' ) ) {
@@ -839,46 +843,46 @@ class SpecialGetDocbook extends SpecialPage {
 		$page_html = $this->recursiveFindSections( $wikipage, $page_html, 0, $chapter_container );
 
 		$dom = new DOMDocument();
-		libxml_use_internal_errors(true);
-		$dom->loadHtml( '<html>' . $page_html . '</html>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+		libxml_use_internal_errors( true );
+		$dom->loadHtml( '<html>' . $page_html . '</html>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
 		libxml_clear_errors();
 
-		foreach( $dom->getElementsByTagName( 'table' ) as $table ) {
+		foreach ( $dom->getElementsByTagName( 'table' ) as $table ) {
 			$classes = $table->getAttribute( 'class' );
 			$classes = explode( " ", $classes );
-			foreach( $classes as $class ) {
-				if ( strpos( $class, "colwidth" ) !== FALSE ) {
+			foreach ( $classes as $class ) {
+				if ( strpos( $class, "colwidth" ) !== false ) {
 					$colwidths = explode( "-", $class );
 					array_shift( $colwidths );
 					if ( $table->getElementsByTagName( "caption" )->length > 0 ) {
-						$table->insertBefore( $dom->createElement( "colgroup" ), $table->getElementsByTagName( "caption" )->item(0)->nextSibling );
+						$table->insertBefore( $dom->createElement( "colgroup" ), $table->getElementsByTagName( "caption" )->item( 0 )->nextSibling );
 					} else {
 						$table->insertBefore( $dom->createElement( "colgroup" ), $table->firstChild );
 					}
-					foreach( $colwidths as $colwidth ) {
+					foreach ( $colwidths as $colwidth ) {
 						$col = $dom->createElement( "col" );
 						$col->setAttribute( "width", $colwidth . "%" );
-						$table->getElementsByTagName( 'colgroup' )->item(0)->appendChild( $col );
+						$table->getElementsByTagName( 'colgroup' )->item( 0 )->appendChild( $col );
 					}
 				}
 			}
 		}
 
 		// Handle SMW Bug https://github.com/SemanticMediaWiki/SemanticMediaWiki/issues/4232
-		foreach( $dom->getElementsByTagName( 'table' ) as $table ) {
-			if ( $table->getElementsByTagName( 'th' )->length > 0 && $table->getElementsByTagName( 'th' )->item(0)->parentNode->nodeName != 'tr' ) {
-				$table->getElementsByTagName( 'th' )->item(0)->parentNode->insertBefore( $dom->createElement( "tr" ), $table->getElementsByTagName( 'th' )->item(0) );
+		foreach ( $dom->getElementsByTagName( 'table' ) as $table ) {
+			if ( $table->getElementsByTagName( 'th' )->length > 0 && $table->getElementsByTagName( 'th' )->item( 0 )->parentNode->nodeName != 'tr' ) {
+				$table->getElementsByTagName( 'th' )->item( 0 )->parentNode->insertBefore( $dom->createElement( "tr" ), $table->getElementsByTagName( 'th' )->item( 0 ) );
 				$th_nodes = [];
-				while ($th_node = $table->getElementsByTagName( "th" )->item(0) ) {
+				while ( $th_node = $table->getElementsByTagName( "th" )->item( 0 ) ) {
 					$th_nodes[] = $th_node->parentNode->removeChild( $th_node );
 				}
-				foreach( $th_nodes as $th_node ) {
+				foreach ( $th_nodes as $th_node ) {
 					$table->getElementsByTagName( 'tr' )->item( 0 )->appendChild( $th_node );
 				}
 			}
 		}
 
-		foreach( $dom->getElementsByTagName( 'a' ) as $node ) {
+		foreach ( $dom->getElementsByTagName( 'a' ) as $node ) {
 			$url = $node->getAttribute( 'href' );
 			if ( $url[0] == '/' ) {
 				$node->setAttribute( 'href', $wgServer . $url );
@@ -891,13 +895,13 @@ class SpecialGetDocbook extends SpecialPage {
 		} else {
 			$repoGroup = RepoGroup::singleton();
 		}
-		foreach( $dom->getElementsByTagName( 'img' ) as $node ) {
+		foreach ( $dom->getElementsByTagName( 'img' ) as $node ) {
 			$file_url = $node->getAttribute( 'src' );
 			$error = false;
 			if ( $repoGroup->findFile( basename( $file_url ) ) ) {
 				$file_path = $repoGroup->findFile( basename( $file_url ) )->getLocalRefPath();
 			} else {
-				if ( strpos( $file_url, "thumb" ) !== FALSE ) {
+				if ( strpos( $file_url, "thumb" ) !== false ) {
 					$parts = explode( "px-", basename( $file_url ) );
 					$width = array_shift( $parts );
 					$file_name = array_shift( $parts );
@@ -930,7 +934,7 @@ class SpecialGetDocbook extends SpecialPage {
 			$node->setAttribute( 'src', basename( $file_url ) );
 		}
 
-		$html = utf8_decode($dom->saveHTML($dom->documentElement));
+		$html = utf8_decode( $dom->saveHTML( $dom->documentElement ) );
 
 		$html = str_replace( "</html>", "", $html );
 		$html = str_replace( "<html>", "", $html );
@@ -945,14 +949,14 @@ class SpecialGetDocbook extends SpecialPage {
 		$new_page_html = '';
 		$open_section = false;
 
-		while( ( $pos = strpos( $page_html, "<$section_header>", $offset ) ) !== FALSE ) {
+		while ( ( $pos = strpos( $page_html, "<$section_header>", $offset ) ) !== false ) {
 			if ( $pos != 0 ) {
-				if ( $section_level == ( count( $this->section_levels ) -1 ) ) {
+				if ( $section_level == ( count( $this->section_levels ) - 1 ) ) {
 					$temp_html = '<html_pandoc>' . substr( $page_html, $offset, $pos - $offset ) . '</html_pandoc>';
 					$temp_html = makeProperHtml( $temp_html );
 					$new_page_html .= $temp_html;
 				} else {
-					$new_page_html .= $this->recursiveFindSections( $wikipage, substr( $page_html, $offset, $pos - $offset ), $section_level+1 );
+					$new_page_html .= $this->recursiveFindSections( $wikipage, substr( $page_html, $offset, $pos - $offset ), $section_level + 1 );
 				}
 			}
 			if ( $open_section ) {
@@ -976,7 +980,7 @@ class SpecialGetDocbook extends SpecialPage {
 			$open_section = true;
 		}
 		if ( $open_section ) {
-			if ( $section_level == ( count( $this->section_levels ) -1 ) ) {
+			if ( $section_level == ( count( $this->section_levels ) - 1 ) ) {
 				$temp_html = '<html_pandoc>' . substr( $page_html, $offset, strlen( $page_html ) - $offset ) . '</html_pandoc>';
 				$temp_html = makeProperHtml( $temp_html );
 				$new_page_html .= $temp_html;
@@ -992,7 +996,7 @@ class SpecialGetDocbook extends SpecialPage {
 			$page_html = $new_page_html;
 		} else {
 			// No header of $section_level were present
-			if ( $section_level == ( count( $this->section_levels ) -1 ) ) {
+			if ( $section_level == ( count( $this->section_levels ) - 1 ) ) {
 				$page_html = makeProperHtml( '<html_pandoc>' . $page_html . '</html_pandoc>' );
 			} else {
 				$page_html = $this->recursiveFindSections( $wikipage, $page_html, $section_level + 1 );
@@ -1022,11 +1026,11 @@ class SpecialGetDocbook extends SpecialPage {
 
 	static function smartSplit( $delimiter, $string, $includeBlankValues = false ) {
 		if ( $string == '' ) {
-			return array();
+			return [];
 		}
 
 		$ignoreNextChar = false;
-		$returnValues = array();
+		$returnValues = [];
 		$numOpenParentheses = 0;
 		$curReturnValue = '';
 
@@ -1072,7 +1076,7 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		// Remove empty strings (but not other quasi-empty values, like '0') and re-key the array.
-		$noEmptyStrings = function ( $s ) {
+		$noEmptyStrings = static function ( $s ) {
 			return $s !== '';
 		};
 		return array_values( array_filter( $returnValues, $noEmptyStrings ) );
@@ -1080,60 +1084,61 @@ class SpecialGetDocbook extends SpecialPage {
 
 	public static function extractParametersInBrackets( $string ) {
 		if ( count( explode( '(', $string ) ) != 2 ) {
-			return [$string, []];
+			return [ $string, [] ];
 		}
 		$parts = explode( '(', $string );
 		$line_props = explode( ')', $parts[1] )[0];
-		$chunks = array_chunk(preg_split('/(=|,)/', $line_props), 2); // See https://stackoverflow.com/a/32768029/1150075
-		$line_props = array_combine(array_column($chunks, 0), array_column($chunks, 1));
+		$chunks = array_chunk( preg_split( '/(=|,)/', $line_props ), 2 ); // See https://stackoverflow.com/a/32768029/1150075
+		$line_props = array_combine( array_column( $chunks, 0 ), array_column( $chunks, 1 ) );
 		return [ $parts[0], $line_props ];
 	}
 }
 
 function makeProperHtml( $improperHtml ) {
 	$dom = new DOMDocument();
-	libxml_use_internal_errors(true);
-	$dom->loadHtml( $improperHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+	libxml_use_internal_errors( true );
+	$dom->loadHtml( $improperHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
 	libxml_clear_errors();
 	return $dom->saveHTML();
 }
 
-function rrmdir($dir) { 
-   if (is_dir($dir)) { 
-     $objects = scandir($dir); 
-     foreach ($objects as $object) { 
-       if ($object != "." && $object != "..") { 
-         if (is_dir($dir."/".$object))
-           rrmdir($dir."/".$object);
-         else
-           unlink($dir."/".$object); 
-       } 
-     }
-     rmdir($dir);
-   }
+function rrmdir( $dir ) {
+	if ( is_dir( $dir ) ) {
+		$objects = scandir( $dir );
+		foreach ( $objects as $object ) {
+			if ( $object != "." && $object != ".." ) {
+				if ( is_dir( $dir . "/" . $object ) ) {
+					rrmdir( $dir . "/" . $object );
+				} else {
+					unlink( $dir . "/" . $object );
+				}
+			}
+		}
+		rmdir( $dir );
+	}
 }
 
-function cleanse($string, $allowedTags = array()) {
-	if (get_magic_quotes_gpc()) {
-		$string = stripslashes($stringIn);
+function cleanse( $string, $allowedTags = [] ) {
+	if ( get_magic_quotes_gpc() ) {
+		$string = stripslashes( $stringIn );
 	}
-	
+
 	// ============
 	// Remove MS Word Special Characters
 	// ============
-	
-	$search  = array('&acirc;€“','&acirc;€œ','&acirc;€˜','&acirc;€™','&Acirc;&pound;','&Acirc;&not;','&acirc;„&cent;');
-	$replace = array('-','&ldquo;','&lsquo;','&rsquo;','&pound;','&not;','&#8482;');
-	
-	$string = str_replace($search, $replace, $string);
-	$string = str_replace('&acirc;€', '&rdquo;', $string);
 
-	$search = array("&#39;", "\xc3\xa2\xc2\x80\xc2\x99", "\xc3\xa2\xc2\x80\xc2\x93", "\xc3\xa2\xc2\x80\xc2\x9d", "\xc3\xa2\x3f\x3f");
-	$resplace = array("'", "'", ' - ', '"', "'");
-	
-	$string = str_replace($search, $replace, $string);
+	$search  = [ '&acirc;€“','&acirc;€œ','&acirc;€˜','&acirc;€™','&Acirc;&pound;','&Acirc;&not;','&acirc;„&cent;' ];
+	$replace = [ '-','&ldquo;','&lsquo;','&rsquo;','&pound;','&not;','&#8482;' ];
 
-	$quotes = array(
+	$string = str_replace( $search, $replace, $string );
+	$string = str_replace( '&acirc;€', '&rdquo;', $string );
+
+	$search = [ "&#39;", "\xc3\xa2\xc2\x80\xc2\x99", "\xc3\xa2\xc2\x80\xc2\x93", "\xc3\xa2\xc2\x80\xc2\x9d", "\xc3\xa2\x3f\x3f" ];
+	$resplace = [ "'", "'", ' - ', '"', "'" ];
+
+	$string = str_replace( $search, $replace, $string );
+
+	$quotes = [
 		"\xC2\xAB"     => '"',
 		"\xC2\xBB"     => '"',
 		"\xE2\x80\x98" => "'",
@@ -1152,11 +1157,11 @@ function cleanse($string, $allowedTags = array()) {
 		"\xc3\xb1"	   => "&#241;",
 		"\x96"		   => "&#241;",
 		"\xe2\x81\x83" => '&bull;'
-	);
-	$string = strtr($string, $quotes);
+	];
+	$string = strtr( $string, $quotes );
 	/*
 	// Use the below to get the byte of the special char and put it in the array above + the replacement.
-	
+
 	if (strpos($string, "Live Wave Buoy Data") !== false)
 	{
 		for ($i=strpos($string, "Live Wave Buoy Data") ; $i<strlen($string) ; $i++) {
@@ -1171,6 +1176,6 @@ function cleanse($string, $allowedTags = array()) {
 	// ============
 	// END
 	// ============
-	
+
 	return $string;
 }

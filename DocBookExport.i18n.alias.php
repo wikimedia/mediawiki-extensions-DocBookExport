@@ -1,8 +1,8 @@
 <?php
 /**
-* @file
-* @ingroup DocBookExport
-*/
+ * @file
+ * @ingroup DocBookExport
+ */
 
 $specialPageAliases = [];
 

@@ -1,14 +1,14 @@
 <?php
 /**
-* @file
-* @ingroup DocBookExport
-*/
+ * @file
+ * @ingroup DocBookExport
+ */
 
-$magicWords = array();
+$magicWords = [];
 
 /** English (English) */
-$magicWords['en'] = array(
-	'docbook' => array( 0, 'docbook' ),
-	'footnote' => array( 0, 'footnote' ),
-	'docbook_index' => array( 0, 'docbook_index' )
-);
+$magicWords['en'] = [
+	'docbook' => [ 0, 'docbook' ],
+	'footnote' => [ 0, 'footnote' ],
+	'docbook_index' => [ 0, 'docbook_index' ]
+];
