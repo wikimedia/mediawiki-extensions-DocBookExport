@@ -1,13 +1,13 @@
 .book {
-    max-width: 70%;
-    margin-left: 15%;
-    margin-right: 15%;
+	max-width: 70%;
+	margin-left: 15%;
+	margin-right: 15%;
 }
 
 h1.title {
-    text-align: center;
-}
-h2.title {
-    text-align: center;
+	text-align: center;
 }
 
+h2.title {
+	text-align: center;
+}
