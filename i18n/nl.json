@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"McDutchie"
+		]
+	},
+	"docbookexport-desc": "Voegt een parserfunctie <code><nowiki>{{#docbook:}}</nowiki></code> toe om een DocBook te maken van geselecteerde wikipagina’s",
+	"getdocbook": "DocBook maken",
+	"apihelp-getdocbook-summary": "Een DocBook maken van een wikipagina"
+}
