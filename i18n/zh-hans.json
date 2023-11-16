@@ -1,9 +1,11 @@
 {
 	"@metadata": {
 		"authors": [
-			"StarrySky"
+			"StarrySky",
+			"GuoPC"
 		]
 	},
-	"getdocbook": "得到DocBook",
-	"apihelp-getdocbook-summary": "创建一个来自wiki页面的DocBook"
+	"docbookexport-desc": "从所选的wiki页面添加<code><nowiki>{{#docbook:}}</nowiki></code>解析功能以创建DocBook",
+	"getdocbook": "获取DocBook",
+	"apihelp-getdocbook-summary": "从wiki页面创建DocBook"
 }
