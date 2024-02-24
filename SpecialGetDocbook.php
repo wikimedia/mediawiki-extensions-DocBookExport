@@ -816,9 +816,10 @@ class SpecialGetDocbook extends SpecialPage {
 		$footnotes = [];
 
 		$titleObj = Title::newFromText( $wikipage );
+		$services = MediaWikiServices::getInstance();
 		if ( method_exists( MediaWikiServices::class, 'getWikiPageFactory' ) ) {
 			// MW 1.36+
-			$pageObj = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $titleObj );
+			$pageObj = $services->getWikiPageFactory()->newFromTitle( $titleObj );
 		} else {
 			$pageObj = new WikiPage( $titleObj );
 		}
@@ -833,7 +834,8 @@ class SpecialGetDocbook extends SpecialPage {
 		$wikitext = str_replace( "ref>", "footnote>", $wikitext );
 		$content = new WikitextContent( $wikitext );
 
-		$parser_output = $content->getParserOutput( $titleObj, null, $popts );
+		$contentRenderer = $services->getContentRenderer();
+		$parser_output = $contentRenderer->getParserOutput( $titleObj, null, $popts );
 		if ( !$parser_output ) {
 			return '';
 		}
