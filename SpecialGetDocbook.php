@@ -828,7 +828,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( !$content ) {
 			return '';
 		}
-		$wikitext = $content->getNativeData() . "\n" . '__NOTOC__ __NOEDITSECTION__';
+		$wikitext = $content->getText() . "\n" . '__NOTOC__ __NOEDITSECTION__';
 
 		$wikitext = str_replace( "<ref", "<footnote", $wikitext );
 		$wikitext = str_replace( "ref>", "footnote>", $wikitext );
