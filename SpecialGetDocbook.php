@@ -236,7 +236,7 @@ class SpecialGetDocbook extends SpecialPage {
 			$book_contents .= '<corpauthor>' . $options['corpauthor'] . '</corpauthor>';
 		}
 		if ( !empty( $options['productname'] ) ) {
-			list( $param_content, $parameters ) = self::extractParametersInBrackets( $options['productname'] );
+			[ $param_content, $parameters ] = self::extractParametersInBrackets( $options['productname'] );
 			if ( array_key_exists( 'class', $parameters ) ) {
 				$book_contents .= '<productname class="' . $parameters['class'] . '">' . $param_content . '</productname>';
 			} else {
@@ -244,7 +244,7 @@ class SpecialGetDocbook extends SpecialPage {
 			}
 		}
 		if ( !empty( $options['biblioid'] ) ) {
-			list( $param_content, $parameters ) = self::extractParametersInBrackets( $options['biblioid'] );
+			[ $param_content, $parameters ] = self::extractParametersInBrackets( $options['biblioid'] );
 			if ( array_key_exists( 'class', $parameters ) ) {
 				$book_contents .= '<biblioid class="' . $parameters['class'] . '">' . $param_content . '</biblioid>';
 			} else {
@@ -499,7 +499,7 @@ class SpecialGetDocbook extends SpecialPage {
 			$identifier = $parts[0];
 			$after_identifier = $parts[1];
 
-			list( $param_content, $parameters ) = self::extractParametersInBrackets( $after_identifier );
+			[ $param_content, $parameters ] = self::extractParametersInBrackets( $after_identifier );
 			$wiki_pages = explode( ',', $param_content );
 			$display_pagename = $wiki_pages[0];
 			$orientation_mode = "";
@@ -1129,8 +1129,8 @@ function cleanse( $string, $allowedTags = [] ) {
 	// Remove MS Word Special Characters
 	// ============
 
-	$search  = [ '&acirc;€“','&acirc;€œ','&acirc;€˜','&acirc;€™','&Acirc;&pound;','&Acirc;&not;','&acirc;„&cent;' ];
-	$replace = [ '-','&ldquo;','&lsquo;','&rsquo;','&pound;','&not;','&#8482;' ];
+	$search  = [ '&acirc;€“', '&acirc;€œ', '&acirc;€˜', '&acirc;€™', '&Acirc;&pound;', '&Acirc;&not;', '&acirc;„&cent;' ];
+	$replace = [ '-', '&ldquo;', '&lsquo;', '&rsquo;', '&pound;', '&not;', '&#8482;' ];
 
 	$string = str_replace( $search, $replace, $string );
 	$string = str_replace( '&acirc;€', '&rdquo;', $string );

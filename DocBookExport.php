@@ -111,7 +111,7 @@ class DocBookExport {
 			}
 			$identifier = $parts[0];
 			$after_identifier = $parts[1];
-			list( $param_content, $parameters ) = SpecialGetDocbook::extractParametersInBrackets( $after_identifier );
+			[ $param_content, $parameters ] = SpecialGetDocbook::extractParametersInBrackets( $after_identifier );
 
 			$docbook_preview .= '<br>' . $identifier . " "
 				. implode(
