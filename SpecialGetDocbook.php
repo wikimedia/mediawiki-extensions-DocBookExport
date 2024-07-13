@@ -1,6 +1,6 @@
 <?php
-
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Revision\RevisionRecord;
 
 class SpecialGetDocbook extends SpecialPage {
 
@@ -824,7 +824,7 @@ class SpecialGetDocbook extends SpecialPage {
 			$pageObj = new WikiPage( $titleObj );
 		}
 
-		$content = $pageObj->getContent( Revision::RAW );
+		$content = $pageObj->getContent( RevisionRecord::RAW );
 		if ( !$content ) {
 			return '';
 		}
