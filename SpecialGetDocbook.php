@@ -35,7 +35,7 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		$title = Title::newFromText( $this->embed_page );
-		$dbr = wfGetDB( DB_REPLICA );
+		$dbr = MediaWikiServices::getInstance()->getDBLoadBalancer()->getConnection( DB_REPLICA );
 		$propValue = $dbr->selectField( 'page_props', // table to use
 			'pp_value', // Field to select
 			[ 'pp_page' => $title->getArticleID(), 'pp_propname' => md5( "docbook_" . $this->bookname ) ], // where conditions
