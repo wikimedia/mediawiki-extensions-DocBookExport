@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"Toliño"
+		]
+	},
+	"docbookexport-desc": "Engade a función de análise sintáctica <code><nowiki>{{#docbook:}}</nowiki></code> para crear un DocBook a partir das páxinas wiki seleccionadas",
+	"getdocbook": "Obter un DocBook",
+	"apihelp-getdocbook-summary": "Crear un DocBook a partir dunha páxina do wiki"
+}
