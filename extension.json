@@ -10,7 +10,7 @@
 	"descriptionmsg": "docbookexport-desc",
 	"type": "other",
 	"requires": {
-		"MediaWiki": ">= 1.32.0"
+		"MediaWiki": ">= 1.40.0"
 	},
 	"AutoloadClasses": {
 		"DocBookExport": "DocBookExport.php",
