@@ -1,10 +1,11 @@
 {
 	"@metadata": {
 		"authors": [
-			"Robby"
+			"Robby",
+			"Volvox"
 		]
 	},
-	"docbookexport-desc": "Setzt <code><nowiki>{{#docbook:}}</nowiki></code> Parser-Funktioun derbäi fir en DocBook vun erausgesichte Wiki-Säiten ze generéieren",
+	"docbookexport-desc": "Setzt <code><nowiki>{{#docbook:}}</nowiki></code> Parserfunktioun derbäi fir en DocBook vun erausgesichte Wiki-Säiten ze generéieren",
 	"getdocbook": "En DocBook generéieren",
 	"apihelp-getdocbook-summary": "En DocBook vun enger Wiki-Säit generéieren"
 }
