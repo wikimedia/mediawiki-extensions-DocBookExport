@@ -688,7 +688,6 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		$httpcode = curl_getinfo( $request, CURLINFO_HTTP_CODE );
-		curl_close( $request );
 
 		$result = json_decode( $result, true );
 		$this->processResponse( $httpcode, $result );
@@ -755,7 +754,6 @@ class SpecialGetDocbook extends SpecialPage {
 			return;
 		}
 		$httpcode = curl_getinfo( $request, CURLINFO_HTTP_CODE );
-		curl_close( $request );
 
 		$result = json_decode( $result, true );
 		$this->processResponse( $httpcode, $result );
