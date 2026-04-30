@@ -1,9 +1,11 @@
 {
 	"@metadata": {
 		"authors": [
-			"Ykhwong"
+			"Ykhwong",
+			"Tensama0415"
 		]
 	},
+	"docbookexport-desc": "선택된 위키 문서로부터 DocBook을 만들기 위해 <code><nowiki>{{#docbook:}}</nowiki></code> 파서 함수를 추가",
 	"getdocbook": "DocBook 가져오기",
 	"apihelp-getdocbook-summary": "위키 문서로부터 DocBook을 만듭니다"
 }
