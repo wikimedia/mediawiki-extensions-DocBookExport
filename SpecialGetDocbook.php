@@ -205,12 +205,7 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		if ( array_key_exists( 'xsl_import', $options ) ) {
-			if ( method_exists( MediaWikiServices::class, 'getRepoGroup' ) ) {
-				// MediaWiki 1.34+
-				$repoGroup = MediaWikiServices::getInstance()->getRepoGroup();
-			} else {
-				$repoGroup = RepoGroup::singleton();
-			}
+			$repoGroup = MediaWikiServices::getInstance()->getRepoGroup();
 			if ( $repoGroup->findFile( basename( $options['xsl_import'] ) ) ) {
 				$file_path = $repoGroup->findFile( basename( $options['xsl_import'] ) )->getLocalRefPath();
 				$all_files[] = $file_path;
@@ -294,12 +289,7 @@ class SpecialGetDocbook extends SpecialPage {
 			$book_contents .= '</subjectset>';
 		}
 		if ( !empty( $options['logo'] ) ) {
-			if ( method_exists( MediaWikiServices::class, 'getRepoGroup' ) ) {
-				// MediaWiki 1.34+
-				$repoGroup = MediaWikiServices::getInstance()->getRepoGroup();
-			} else {
-				$repoGroup = RepoGroup::singleton();
-			}
+			$repoGroup = MediaWikiServices::getInstance()->getRepoGroup();
 			$file_path = $repoGroup->findFile( basename( $options['logo'] ) )->getLocalRefPath();
 			$all_files[] = $file_path;
 			$book_contents .= '
@@ -822,12 +812,7 @@ class SpecialGetDocbook extends SpecialPage {
 
 		$titleObj = Title::newFromText( $wikipage );
 		$services = MediaWikiServices::getInstance();
-		if ( method_exists( MediaWikiServices::class, 'getWikiPageFactory' ) ) {
-			// MW 1.36+
-			$pageObj = $services->getWikiPageFactory()->newFromTitle( $titleObj );
-		} else {
-			$pageObj = new WikiPage( $titleObj );
-		}
+		$pageObj = $services->getWikiPageFactory()->newFromTitle( $titleObj );
 
 		$content = $pageObj->getContent( RevisionRecord::RAW );
 		if ( !$content ) {
@@ -896,12 +881,7 @@ class SpecialGetDocbook extends SpecialPage {
 			}
 		}
 
-		if ( method_exists( MediaWikiServices::class, 'getRepoGroup' ) ) {
-			// MediaWiki 1.34+
-			$repoGroup = MediaWikiServices::getInstance()->getRepoGroup();
-		} else {
-			$repoGroup = RepoGroup::singleton();
-		}
+		$repoGroup = MediaWikiServices::getInstance()->getRepoGroup();
 		foreach ( $dom->getElementsByTagName( 'img' ) as $node ) {
 			$file_url = $node->getAttribute( 'src' );
 			$error = false;

@@ -24,12 +24,7 @@ class DocBookExport {
 		$options = self::extractOptions( array_slice( func_get_args(), 1 ) );
 		$group_by = $options['grouping'];
 		$parserOutput = $parser->getOutput();
-		if ( method_exists( $parserOutput, 'setPageProperty' ) ) {
-			// MW 1.38
-			$parserOutput->setPageProperty( 'docbook_index_group_by', $group_by );
-		} else {
-			$parserOutput->setProperty( 'docbook_index_group_by', $group_by );
-		}
+		$parserOutput->setPageProperty( 'docbook_index_group_by', $group_by );
 		return '';
 	}
 
@@ -86,12 +81,7 @@ class DocBookExport {
 		}
 
 		$parserOutput = $parser->getOutput();
-		if ( method_exists( $parserOutput, 'setPageProperty' ) ) {
-			// MW 1.38
-			$parserOutput->setPageProperty( md5( 'docbook_' . $book_name ), $serialized );
-		} else {
-			$parserOutput->setProperty( md5( 'docbook_' . $book_name ), $serialized );
-		}
+		$parserOutput->setPageProperty( md5( 'docbook_' . $book_name ), $serialized );
 
 		$linkRenderer = MediaWikiServices::getInstance()->getLinkRenderer();
 
