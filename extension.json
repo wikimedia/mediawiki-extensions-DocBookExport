@@ -27,7 +27,16 @@
 		"ParserFirstCallInit": "DocBookExport::onParserSetup"
 	},
 	"SpecialPages": {
-		"GetDocbook": "SpecialGetDocbook"
+		"GetDocbook": {
+			"class": "SpecialGetDocbook",
+			"services": [
+				"MainConfig",
+				"ConnectionProvider",
+				"ContentRenderer",
+				"RepoGroup",
+				"WikiPageFactory"
+			]
+		}
 	},
 	"MessagesDirs": {
 		"DocBookExport": [

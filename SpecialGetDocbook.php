@@ -1,12 +1,23 @@
 <?php
 use MediaWiki\Category\Category;
-use MediaWiki\MediaWikiServices;
+use MediaWiki\Config\Config;
+use MediaWiki\Content\Renderer\ContentRenderer;
+use MediaWiki\FileRepo\RepoGroup;
+use MediaWiki\MainConfigNames;
+use MediaWiki\Page\WikiPageFactory;
 use MediaWiki\Revision\RevisionRecord;
 use MediaWiki\Title\Title;
+use Wikimedia\Rdbms\IConnectionProvider;
 
 class SpecialGetDocbook extends SpecialPage {
 
-	public function __construct() {
+	public function __construct(
+		private readonly Config $config,
+		private readonly IConnectionProvider $dbProvider,
+		private readonly ContentRenderer $contentRenderer,
+		private readonly RepoGroup $repoGroup,
+		private readonly WikiPageFactory $wikiPageFactory,
+	) {
 		parent::__construct( 'GetDocbook' );
 	}
 
@@ -42,7 +53,7 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		$title = Title::newFromText( $this->embed_page );
-		$dbr = MediaWikiServices::getInstance()->getDBLoadBalancer()->getConnection( DB_REPLICA );
+		$dbr = $this->dbProvider->getReplicaDatabase();
 		$propValue = $dbr->selectField( 'page_props', // table to use
 			'pp_value', // Field to select
 			[ 'pp_page' => $title->getArticleID(), 'pp_propname' => md5( "docbook_" . $this->bookname ) ], // where conditions
@@ -205,9 +216,8 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		if ( array_key_exists( 'xsl_import', $options ) ) {
-			$repoGroup = MediaWikiServices::getInstance()->getRepoGroup();
-			if ( $repoGroup->findFile( basename( $options['xsl_import'] ) ) ) {
-				$file_path = $repoGroup->findFile( basename( $options['xsl_import'] ) )->getLocalRefPath();
+			if ( $this->repoGroup->findFile( basename( $options['xsl_import'] ) ) ) {
+				$file_path = $this->repoGroup->findFile( basename( $options['xsl_import'] ) )->getLocalRefPath();
 				$all_files[] = $file_path;
 			}
 		} elseif ( !empty( $wgDocBookExportXSLRepository ) ) {
@@ -289,8 +299,7 @@ class SpecialGetDocbook extends SpecialPage {
 			$book_contents .= '</subjectset>';
 		}
 		if ( !empty( $options['logo'] ) ) {
-			$repoGroup = MediaWikiServices::getInstance()->getRepoGroup();
-			$file_path = $repoGroup->findFile( basename( $options['logo'] ) )->getLocalRefPath();
+			$file_path = $this->repoGroup->findFile( basename( $options['logo'] ) )->getLocalRefPath();
 			$all_files[] = $file_path;
 			$book_contents .= '
 				<mediaobject>
@@ -805,14 +814,11 @@ class SpecialGetDocbook extends SpecialPage {
 	}
 
 	public function getHTMLFromWikiPage( $wikipage, &$all_files, $popts, $chapter_container ) {
-		global $wgServer;
-
 		$placeholderId = 0;
 		$footnotes = [];
 
 		$titleObj = Title::newFromText( $wikipage );
-		$services = MediaWikiServices::getInstance();
-		$pageObj = $services->getWikiPageFactory()->newFromTitle( $titleObj );
+		$pageObj = $this->wikiPageFactory->newFromTitle( $titleObj );
 
 		$content = $pageObj->getContent( RevisionRecord::RAW );
 		if ( !$content ) {
@@ -824,8 +830,7 @@ class SpecialGetDocbook extends SpecialPage {
 		$wikitext = str_replace( "ref>", "footnote>", $wikitext );
 		$content = new WikitextContent( $wikitext );
 
-		$contentRenderer = $services->getContentRenderer();
-		$parser_output = $contentRenderer->getParserOutput( $titleObj, null, $popts );
+		$parser_output = $this->contentRenderer->getParserOutput( $titleObj, null, $popts );
 		if ( !$parser_output ) {
 			return '';
 		}
@@ -877,26 +882,25 @@ class SpecialGetDocbook extends SpecialPage {
 		foreach ( $dom->getElementsByTagName( 'a' ) as $node ) {
 			$url = $node->getAttribute( 'href' );
 			if ( $url[0] == '/' ) {
-				$node->setAttribute( 'href', $wgServer . $url );
+				$node->setAttribute( 'href', $this->config->get( MainConfigNames::Server ) . $url );
 			}
 		}
 
-		$repoGroup = MediaWikiServices::getInstance()->getRepoGroup();
 		foreach ( $dom->getElementsByTagName( 'img' ) as $node ) {
 			$file_url = $node->getAttribute( 'src' );
 			$error = false;
-			if ( $repoGroup->findFile( basename( $file_url ) ) ) {
-				$file_path = $repoGroup->findFile( basename( $file_url ) )->getLocalRefPath();
+			if ( $this->repoGroup->findFile( basename( $file_url ) ) ) {
+				$file_path = $this->repoGroup->findFile( basename( $file_url ) )->getLocalRefPath();
 			} else {
 				if ( strpos( $file_url, "thumb" ) !== false ) {
 					$parts = explode( "px-", basename( $file_url ) );
 					$width = array_shift( $parts );
 					$file_name = array_shift( $parts );
-					$file = $repoGroup->findFile( $file_name );
+					$file = $this->repoGroup->findFile( $file_name );
 					if ( !$file ) {
 						if ( substr_count( $file_name, "." ) > 1 ) { // In case of filename.svg files the thumbnail file can be filename.svg.png
 							$file_name = substr( $file_name, 0, strrpos( $file_name, '.' ) );
-							$file = $repoGroup->findFile( $file_name );
+							$file = $this->repoGroup->findFile( $file_name );
 						}
 					}
 					if ( $file ) {
@@ -997,9 +1001,7 @@ class SpecialGetDocbook extends SpecialPage {
 	 * @return string Full filesystem path with no trailing slash.
 	 */
 	protected function getUploadDir() {
-		$uploadDirectory = MediaWikiServices::getInstance()
-			->getMainConfig()
-			->get( 'UploadDirectory' );
+		$uploadDirectory = $this->config->get( MainConfigNames::UploadDirectory );
 		$uploadDir = $uploadDirectory . '/DocBookExport';
 		if ( !is_dir( $uploadDir ) ) {
 			mkdir( $uploadDir );
