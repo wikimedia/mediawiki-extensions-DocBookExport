@@ -7,7 +7,12 @@ use MediaWiki\Title\Title;
 class SpecialGetDocbook extends SpecialPage {
 
 	public function __construct() {
-		parent::__construct( 'GetDocbook', 'getdocbook' );
+		parent::__construct( 'GetDocbook' );
+	}
+
+	/** @inheritDoc */
+	public function getRestriction(): string {
+		return 'getdocbook';
 	}
 
 	/** @var string */
