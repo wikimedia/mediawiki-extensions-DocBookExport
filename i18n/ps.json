@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"شاه زمان پټان"
+		]
+	},
+	"docbookexport-desc": "له ټاکل شويو ويکي مخونو څخه د DocBook  جوړولو لپاره  <code><nowiki>{{#docbook:}}</nowiki></code> ټوټه‌کوونکې کړنچار ورگډوي",
+	"getdocbook": "DocBook ترلاسه‌کول",
+	"apihelp-getdocbook-summary": "له ويکي مخ نه DocBook جوړ کړئ"
+}
