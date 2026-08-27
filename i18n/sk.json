@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"Wizzard"
+		]
+	},
+	"docbookexport-desc": "Pridáva funkciu syntaktického analyzátora <code><nowiki>{{#docbook:}}</nowiki></code> na vytvorenie DocBooku z vybraných wiki stránok",
+	"getdocbook": "Získať DocBook",
+	"apihelp-getdocbook-summary": "Vytvoriť DocBook z wiki stránky"
+}
