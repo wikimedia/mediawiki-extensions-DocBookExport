@@ -25,7 +25,10 @@
 	},
 	"HookHandlers": {
 		"main": {
-			"class": "DocBookExport"
+			"class": "DocBookExport",
+			"services": [
+				"LinkRenderer"
+			]
 		}
 	},
 	"Hooks": {

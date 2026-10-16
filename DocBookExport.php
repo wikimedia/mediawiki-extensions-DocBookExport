@@ -1,28 +1,33 @@
 <?php
-use MediaWiki\MediaWikiServices;
+use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\Title\Title;
 
 class DocBookExport implements
 	\MediaWiki\Parser\Hook\ParserFirstCallInitHook
 {
 
+	public function __construct(
+		private readonly LinkRenderer $linkRenderer,
+	) {
+	}
+
 	/**
 	 * @param Parser $parser
 	 * @return bool|void True or no return value to continue or false to abort
 	 */
 	public function onParserFirstCallInit( $parser ) {
-		$parser->setHook( 'docbook', self::parseDocBookSyntaxTagExtension( ... ) );
-		$parser->setHook( 'footnote', self::parseFootNoteSyntaxTagExtension( ... ) );
-		$parser->setFunctionHook( 'docbook', self::parseDocBookSyntaxParserFunction( ... ) );
-		$parser->setFunctionHook( 'docbook_index', self::parseDoocBookIndexParserExtension( ... ) );
+		$parser->setHook( 'docbook', $this->parseDocBookSyntaxTagExtension( ... ) );
+		$parser->setHook( 'footnote', $this->parseFootNoteSyntaxTagExtension( ... ) );
+		$parser->setFunctionHook( 'docbook', $this->parseDocBookSyntaxParserFunction( ... ) );
+		$parser->setFunctionHook( 'docbook_index', $this->parseDoocBookIndexParserExtension( ... ) );
 	}
 
 	/**
 	 * @param Parser $parser
 	 * @return string
 	 */
-	public static function parseDoocBookIndexParserExtension( Parser $parser ) {
-		$options = self::extractOptions( array_slice( func_get_args(), 1 ) );
+	public function parseDoocBookIndexParserExtension( Parser $parser ) {
+		$options = $this->extractOptions( array_slice( func_get_args(), 1 ) );
 		$group_by = $options['grouping'];
 		$parserOutput = $parser->getOutput();
 		$parserOutput->setPageProperty( 'docbook_index_group_by', $group_by );
@@ -33,9 +38,9 @@ class DocBookExport implements
 	 * @param Parser &$parser
 	 * @return array
 	 */
-	public static function parseDocBookSyntaxParserFunction( Parser &$parser ) {
-		$options = self::extractOptions( array_slice( func_get_args(), 1 ) );
-		return [ self::parseDocBookSyntax( $parser, $options ), 'noparse' => true, 'isHTML' => true ];
+	public function parseDocBookSyntaxParserFunction( Parser &$parser ) {
+		$options = $this->extractOptions( array_slice( func_get_args(), 1 ) );
+		return [ $this->parseDocBookSyntax( $parser, $options ), 'noparse' => true, 'isHTML' => true ];
 	}
 
 	/**
@@ -45,7 +50,7 @@ class DocBookExport implements
 	 * @param PPFrame $frame
 	 * @return string
 	 */
-	public static function parseFootNoteSyntaxTagExtension( string $input, array $args, Parser $parser, PPFrame $frame ) {
+	public function parseFootNoteSyntaxTagExtension( string $input, array $args, Parser $parser, PPFrame $frame ) {
 		if ( empty( $input ) ) {
 			return '<a class="footnoteref" id="' . $args['name'] . '" href=""></a>';
 		} else {
@@ -60,9 +65,9 @@ class DocBookExport implements
 	 * @param PPFrame $frame
 	 * @return string
 	 */
-	public static function parseDocBookSyntaxTagExtension( string $input, array $args, Parser $parser, PPFrame $frame ) {
+	public function parseDocBookSyntaxTagExtension( string $input, array $args, Parser $parser, PPFrame $frame ) {
 		$args['page structure'] = $input;
-		return self::parseDocBookSyntax( $parser, $args );
+		return $this->parseDocBookSyntax( $parser, $args );
 	}
 
 	/**
@@ -70,7 +75,7 @@ class DocBookExport implements
 	 * @param array $options
 	 * @return string
 	 */
-	public static function parseDocBookSyntax( Parser &$parser, array $options ) {
+	public function parseDocBookSyntax( Parser &$parser, array $options ) {
 		if ( $parser->getTitle() == null ) {
 			return "";
 		}
@@ -84,9 +89,7 @@ class DocBookExport implements
 		$parserOutput = $parser->getOutput();
 		$parserOutput->setPageProperty( md5( 'docbook_' . $book_name ), $serialized );
 
-		$linkRenderer = MediaWikiServices::getInstance()->getLinkRenderer();
-
-		$docbook_link = $linkRenderer->makeKnownLink(
+		$docbook_link = $this->linkRenderer->makeKnownLink(
 				Title::makeTitle( NS_SPECIAL, 'GetDocbook' ),
 				"Get Docbook - " . $book_name,
 				[],
@@ -108,8 +111,8 @@ class DocBookExport implements
 			$docbook_preview .= '<br>' . $identifier . " "
 				. implode(
 					", ",
-					array_map( static function ( $pagename ) use ( $linkRenderer ) {
-						return $linkRenderer->makeKnownLink(
+					array_map( function ( $pagename ) {
+						return $this->linkRenderer->makeKnownLink(
 							Title::newFromText( $pagename ),
 							$pagename
 						);
@@ -126,7 +129,7 @@ class DocBookExport implements
 	 * @param array $options
 	 * @return array
 	 */
-	public static function extractOptions( array $options ) {
+	public function extractOptions( array $options ) {
 		$results = [];
 
 		foreach ( $options as $option ) {
