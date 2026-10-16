@@ -23,8 +23,13 @@
 		"DocBookExportImportXSLRepoPathPDF": "",
 		"DocBookExportImportXSLRepoPathHTML": ""
 	},
+	"HookHandlers": {
+		"main": {
+			"class": "DocBookExport"
+		}
+	},
 	"Hooks": {
-		"ParserFirstCallInit": "DocBookExport::onParserSetup"
+		"ParserFirstCallInit": "main"
 	},
 	"SpecialPages": {
 		"GetDocbook": {

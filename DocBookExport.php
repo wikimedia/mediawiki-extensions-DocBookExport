@@ -2,18 +2,19 @@
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Title\Title;
 
-class DocBookExport {
+class DocBookExport implements
+	\MediaWiki\Parser\Hook\ParserFirstCallInitHook
+{
 
 	/**
-	 * @param Parser &$parser
-	 * @return true
+	 * @param Parser $parser
+	 * @return bool|void True or no return value to continue or false to abort
 	 */
-	public static function onParserSetup( Parser &$parser ) {
+	public function onParserFirstCallInit( $parser ) {
 		$parser->setHook( 'docbook', self::parseDocBookSyntaxTagExtension( ... ) );
 		$parser->setHook( 'footnote', self::parseFootNoteSyntaxTagExtension( ... ) );
 		$parser->setFunctionHook( 'docbook', self::parseDocBookSyntaxParserFunction( ... ) );
 		$parser->setFunctionHook( 'docbook_index', self::parseDoocBookIndexParserExtension( ... ) );
-		return true;
 	}
 
 	/**
