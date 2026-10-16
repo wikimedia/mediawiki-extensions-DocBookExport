@@ -9,10 +9,10 @@ class DocBookExport {
 	 * @return true
 	 */
 	public static function onParserSetup( Parser &$parser ) {
-		$parser->setHook( 'docbook', 'DocBookExport::parseDocBookSyntaxTagExtension' );
-		$parser->setHook( 'footnote', 'DocBookExport::parseFootNoteSyntaxTagExtension' );
-		$parser->setFunctionHook( 'docbook', 'DocBookExport::parseDocBookSyntaxParserFunction' );
-		$parser->setFunctionHook( 'docbook_index', 'DocBookExport::parseDoocBookIndexParserExtension' );
+		$parser->setHook( 'docbook', self::parseDocBookSyntaxTagExtension( ... ) );
+		$parser->setHook( 'footnote', self::parseFootNoteSyntaxTagExtension( ... ) );
+		$parser->setFunctionHook( 'docbook', self::parseDocBookSyntaxParserFunction( ... ) );
+		$parser->setFunctionHook( 'docbook_index', self::parseDoocBookIndexParserExtension( ... ) );
 		return true;
 	}
 
