@@ -77,11 +77,11 @@ class DocBookExport implements
 	 */
 	public function parseDocBookSyntax( Parser &$parser, array $options ) {
 		if ( $parser->getTitle() == null ) {
-			return "";
+			return '';
 		}
 
 		$serialized = serialize( $options );
-		$book_name = str_replace( " ", "_", $options['title'] );
+		$book_name = str_replace( ' ', '_', $options['title'] );
 		if ( !empty( $options['volumenum'] ) ) {
 			$book_name .= '_' . $options['volumenum'];
 		}
@@ -91,7 +91,7 @@ class DocBookExport implements
 
 		$docbook_link = $this->linkRenderer->makeKnownLink(
 				Title::makeTitle( NS_SPECIAL, 'GetDocbook' ),
-				"Get Docbook - " . $book_name,
+				'Get Docbook - ' . $book_name,
 				[],
 				[ 'embed_page' => $parser->getTitle()->getText(), 'bookname' => $book_name ]
 			);
@@ -108,9 +108,9 @@ class DocBookExport implements
 			$after_identifier = $parts[1];
 			[ $param_content, $parameters ] = SpecialGetDocbook::extractParametersInBrackets( $after_identifier );
 
-			$docbook_preview .= '<br>' . $identifier . " "
+			$docbook_preview .= '<br>' . $identifier . ' '
 				. implode(
-					", ",
+					', ',
 					array_map( function ( $pagename ) {
 						return $this->linkRenderer->makeKnownLink(
 							Title::newFromText( $pagename ),

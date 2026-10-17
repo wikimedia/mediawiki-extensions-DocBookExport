@@ -33,7 +33,7 @@ class SpecialGetDocbook extends SpecialPage {
 	private $bookname = '';
 
 	/** @var string[] */
-	private $section_levels = [ "h1", "h2", "h3", "h4", "h5", "h6" ];
+	private $section_levels = [ 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' ];
 
 	function execute( $query ) {
 		global $wgDocbookExportPandocServerPath, $wgDocBookExportXSLRepository, $wgDocBookExportImportXSLRepoPathPDF;
@@ -47,7 +47,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( empty( $this->embed_page ) ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"This page cannot be called directly"
+				'This page cannot be called directly'
 			);
 			return;
 		}
@@ -56,7 +56,7 @@ class SpecialGetDocbook extends SpecialPage {
 		$dbr = $this->dbProvider->getReplicaDatabase();
 		$propValue = $dbr->selectField( 'page_props', // table to use
 			'pp_value', // Field to select
-			[ 'pp_page' => $title->getArticleID(), 'pp_propname' => md5( "docbook_" . $this->bookname ) ], // where conditions
+			[ 'pp_page' => $title->getArticleID(), 'pp_propname' => md5( 'docbook_' . $this->bookname ) ], // where conditions
 			__METHOD__
 		);
 
@@ -64,7 +64,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( !$options ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Empty docbook structure found."
+				'Empty docbook structure found.'
 			);
 			return;
 		}
@@ -74,17 +74,17 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( !empty( $options['volumenum'] ) ) {
 			$docbook_folder .= '_' . $options['volumenum'];
 		}
-		if ( strpos( $docbook_folder, "(" ) !== false || strpos( $docbook_folder, ")" ) !== false ) {
+		if ( strpos( $docbook_folder, '(' ) !== false || strpos( $docbook_folder, ')' ) !== false ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Title cannot contain parenthesis."
+				'Title cannot contain parenthesis.'
 			);
 			return;
 		}
 
-		$out->addHTML( "<span class='mw-headline'><h3>" . str_replace( "_", " ", $this->bookname ) . "</h3></span>" );
+		$out->addHTML( '<span class="mw-headline"><h3>' . str_replace( '_', ' ', $this->bookname ) . '</h3></span>' );
 
-		if ( $request->getVal( 'action' ) == "check_status" ) {
+		if ( $request->getVal( 'action' ) == 'check_status' ) {
 			return $this->getDocbookStatus( $docbook_folder );
 		}
 
@@ -99,12 +99,12 @@ class SpecialGetDocbook extends SpecialPage {
 		$all_files = [];
 		$index_terms = [];
 		if ( array_key_exists( 'index terms', $options ) ) {
-			foreach ( explode( ",", $options['index terms'] ) as $index ) {
+			foreach ( explode( ',', $options['index terms'] ) as $index ) {
 				$index_data = [];
 				$index_title = Title::newFromText( $index );
 				$propValue = $dbr->selectField( 'page_props', // table to use
 					'pp_value', // Field to select
-					[ 'pp_page' => $index_title->getArticleID(), 'pp_propname' => "docbook_index_group_by" ], // where conditions
+					[ 'pp_page' => $index_title->getArticleID(), 'pp_propname' => 'docbook_index_group_by' ], // where conditions
 					__METHOD__
 				);
 				if ( $propValue !== false ) {
@@ -116,7 +116,7 @@ class SpecialGetDocbook extends SpecialPage {
 
 		$index_categories = [];
 		if ( array_key_exists( 'index term categories', $options ) ) {
-			$index_categories = self::smartSplit( ",", $options['index term categories'] );
+			$index_categories = self::smartSplit( ',', $options['index term categories'] );
 		}
 
 		foreach ( $index_categories as $index_category ) {
@@ -180,7 +180,7 @@ class SpecialGetDocbook extends SpecialPage {
 				if ( empty( $grouping_property ) ) {
 					$propValue = $dbr->selectField( 'page_props', // table to use
 						'pp_value', // Field to select
-						[ 'pp_page' => $categoryMember->getArticleID(), 'pp_propname' => "docbook_index_group_by" ], // where conditions
+						[ 'pp_page' => $categoryMember->getArticleID(), 'pp_propname' => 'docbook_index_group_by' ], // where conditions
 						__METHOD__
 					);
 					if ( $propValue !== false ) {
@@ -208,7 +208,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/index_terms.json", json_encode( $index_terms ) ) ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Failed to create file index_terms.json"
+				'Failed to create file index_terms.json'
 			);
 			return;
 		} else {
@@ -224,7 +224,7 @@ class SpecialGetDocbook extends SpecialPage {
 			if ( !file_put_contents( "$uploadDir/$docbook_folder/xsl_repository.json", json_encode( [ "DocBookExportXSLRepository" => $wgDocBookExportXSLRepository ] ) ) ) {
 				$out->wrapWikiMsg(
 					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-					"Failed to create file xsl_repository.json"
+					'Failed to create file xsl_repository.json'
 				);
 				return;
 			} else {
@@ -317,27 +317,27 @@ class SpecialGetDocbook extends SpecialPage {
 			// if ( array_key_exists( 'watermark.rotation', $options ) ) {
 				// $svg_contents = str_replace( 'ROTATEPLACEHOLDER', $options['watermark.rotation'], $svg_contents );
 			// } else {
-				// $svg_contents = str_replace( 'ROTATEPLACEHOLDER', "-45deg", $svg_contents );
+				// $svg_contents = str_replace( 'ROTATEPLACEHOLDER', '-45deg', $svg_contents );
 			// }
 			if ( array_key_exists( 'watermark.color', $options ) ) {
 				$svg_contents = str_replace( 'FILLPLACEHOLDER', $options['watermark.color'], $svg_contents );
 			} else {
-				$svg_contents = str_replace( 'FILLPLACEHOLDER', "#f2f2f2", $svg_contents );
+				$svg_contents = str_replace( 'FILLPLACEHOLDER', '#f2f2f2', $svg_contents );
 			}
 			if ( array_key_exists( 'watermark.font.family', $options ) ) {
 				$svg_contents = str_replace( 'FONTPLACEHOLDER', $options['watermark.font.family'], $svg_contents );
 			} else {
-				$svg_contents = str_replace( 'FONTPLACEHOLDER', "Sans", $svg_contents );
+				$svg_contents = str_replace( 'FONTPLACEHOLDER', 'Sans', $svg_contents );
 			}
 			if ( array_key_exists( 'watermark.font.size', $options ) ) {
 				$svg_contents = str_replace( 'FONTSIZEPLACEHOLDER', $options['watermark.font.size'], $svg_contents );
 			} else {
-				$svg_contents = str_replace( 'FONTSIZEPLACEHOLDER', "60px", $svg_contents );
+				$svg_contents = str_replace( 'FONTSIZEPLACEHOLDER', '60px', $svg_contents );
 			}
 			if ( !file_put_contents( "$uploadDir/$docbook_folder/watermark.svg", $svg_contents ) ) {
 				$out->wrapWikiMsg(
 					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-					"Failed to create file watermark.svg"
+					'Failed to create file watermark.svg'
 				);
 				return;
 			} else {
@@ -346,7 +346,7 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 
 		$xsl_contents = file_get_contents( __DIR__ . '/docbookexport_template_import.xsl' );
-		$xsl_customization = "";
+		$xsl_customization = '';
 		if ( array_key_exists( 'watermark.text', $options ) ) {
 			$xsl_customization .= '<xsl:param name="draft.mode">yes</xsl:param>';
 			$xsl_customization .= '<xsl:param name="draft.watermark.image">images/watermark.svg</xsl:param>';
@@ -431,11 +431,11 @@ class SpecialGetDocbook extends SpecialPage {
 			$xsl_customization .= '<xsl:param name="footnote.font.size">' . $options['footnote.font.size'] . '</xsl:param>';
 		}
 
-		$xsl_contents = str_replace( "CUSTOMIZED_XSL_PLACEHOLDER", $xsl_customization, $xsl_contents );
+		$xsl_contents = str_replace( 'CUSTOMIZED_XSL_PLACEHOLDER', $xsl_customization, $xsl_contents );
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport_template_import.xsl", $xsl_contents ) ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Failed to create file docbookexport_template_import.xsl"
+				'Failed to create file docbookexport_template_import.xsl'
 			);
 			return;
 		} else {
@@ -451,7 +451,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport.xsl", $xsl_contents ) ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Failed to create file docbookexport.xsl"
+				'Failed to create file docbookexport.xsl'
 			);
 			return;
 		} else {
@@ -462,7 +462,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport_template_override.xsl", $xsl_contents ) ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Failed to create file docbookexport_template_override.xsl"
+				'Failed to create file docbookexport_template_override.xsl'
 			);
 			return;
 		} else {
@@ -473,7 +473,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/pagenumberprefixes.xsl", $pagenumberprefixes ) ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Failed to create file pagenumberprefixes.xsl"
+				'Failed to create file pagenumberprefixes.xsl'
 			);
 			return;
 		} else {
@@ -484,7 +484,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( !file_put_contents( "$uploadDir/$docbook_folder/docbookexport_styles.css", $css_contents ) ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Failed to create file docbookexport_styles.css"
+				'Failed to create file docbookexport_styles.css'
 			);
 			return;
 		} else {
@@ -508,7 +508,7 @@ class SpecialGetDocbook extends SpecialPage {
 			[ $param_content, $parameters ] = self::extractParametersInBrackets( $after_identifier );
 			$wiki_pages = explode( ',', $param_content );
 			$display_pagename = $wiki_pages[0];
-			$orientation_mode = "";
+			$orientation_mode = '';
 
 			if ( array_key_exists( 'title', $parameters ) ) {
 				$display_pagename = $parameters['title'];
@@ -621,7 +621,7 @@ class SpecialGetDocbook extends SpecialPage {
 				if ( $titleObj == null || !$titleObj->exists() ) {
 					$out->wrapWikiMsg(
 						"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-						"Could not find page: " . $wikipage
+						'Could not find page: ' . $wikipage
 					);
 					return;
 				}
@@ -652,14 +652,14 @@ class SpecialGetDocbook extends SpecialPage {
 			return;
 		}
 
-		if ( !file_put_contents( "$uploadDir/$docbook_folder/$docbook_folder" . "_pandoc.html", $book_contents ) ) {
+		if ( !file_put_contents( "$uploadDir/$docbook_folder/$docbook_folder" . '_pandoc.html', $book_contents ) ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Failed to create file $docbook_folder" . "_pandoc.html"
+				"Failed to create file $docbook_folder" . '_pandoc.html'
 			);
 			return;
 		} else {
-			$all_files[] = "$uploadDir/$docbook_folder/$docbook_folder" . "_pandoc.html";
+			$all_files[] = "$uploadDir/$docbook_folder/$docbook_folder" . '_pandoc.html';
 		}
 
 		// Set postdata array
@@ -686,7 +686,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( $result === false ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Error: " . curl_error( $request )
+				'Error: ' . curl_error( $request )
 			);
 			return;
 		}
@@ -724,7 +724,7 @@ class SpecialGetDocbook extends SpecialPage {
 
 		$create_link = $this->getLinkRenderer()->makeKnownLink(
 			Title::makeTitle( NS_SPECIAL, 'GetDocbook' ),
-			"Re-generate Docbook",
+			'Re-generate Docbook',
 			[ 'id' => 'create_docbook' ],
 			[ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'create' ]
 		);
@@ -753,7 +753,7 @@ class SpecialGetDocbook extends SpecialPage {
 		if ( $result === false ) {
 			$out->wrapWikiMsg(
 				"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-				"Error: " . curl_error( $request )
+				'Error: ' . curl_error( $request )
 			);
 			return;
 		}
@@ -769,7 +769,7 @@ class SpecialGetDocbook extends SpecialPage {
 		$out = $this->getOutput();
 		if ( $result['result'] == 'success' ) {
 			if ( !empty( $result['status'] ) ) {
-				$out->addHTML( "<p>Status: " . $result['status'] . "</p>" );
+				$out->addHTML( '<p>Status: ' . $result['status'] . '</p>' );
 				$check_status_link = $this->getLinkRenderer()->makeKnownLink(
 					Title::makeTitle( NS_SPECIAL, 'GetDocbook' ),
 					'Refresh Status',
@@ -777,7 +777,7 @@ class SpecialGetDocbook extends SpecialPage {
 					[ 'embed_page' => $this->embed_page, 'bookname' => $this->bookname, 'action' => 'check_status' ]
 				);
 				$out->addHTML( "<p>$check_status_link</p>" );
-				if ( strpos( $result['status'], "Docbook generated" ) !== false ) {
+				if ( strpos( $result['status'], 'Docbook generated' ) !== false ) {
 					$out->addHTML( '<a href="' . $wgDocbookDownloadServerPath . $result['docbook_zip'] . '">Download XML</a><br>' );
 					$out->addHTML( '<a href="' . $wgDocbookDownloadServerPath . $result['docbook_html'] . '">Download HTML</a><br>' );
 					$out->addHTML( '<a href="' . $wgDocbookDownloadServerPath . $result['docbook_pdf'] . '">Download PDF</a><br>' );
@@ -799,15 +799,15 @@ class SpecialGetDocbook extends SpecialPage {
 			);
 		} else {
 			if ( $httpcode == 200 ) {
-				$out->addHTML( "<p>Status: " . $result['status'] . "</p>" );
+				$out->addHTML( '<p>Status: ' . $result['status'] . '</p>' );
 				$out->wrapWikiMsg(
 					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-					"Docbook was never generated!"
+					'Docbook was never generated!'
 				);
 			} else {
 				$out->wrapWikiMsg(
 					"<div class=\"errorbox\">\nError: $1\n</div><br clear=\"both\" />",
-					"Unknown Error. Response data:" . json_encode( $result ) . " Response Code: " . $httpcode
+					'Unknown Error. Response data:' . json_encode( $result ) . ' Response Code: ' . $httpcode
 				);
 			}
 		}
@@ -826,8 +826,8 @@ class SpecialGetDocbook extends SpecialPage {
 		}
 		$wikitext = $content->getText() . "\n" . '__NOTOC__ __NOEDITSECTION__';
 
-		$wikitext = str_replace( "<ref", "<footnote", $wikitext );
-		$wikitext = str_replace( "ref>", "footnote>", $wikitext );
+		$wikitext = str_replace( '<ref', '<footnote', $wikitext );
+		$wikitext = str_replace( 'ref>', 'footnote>', $wikitext );
 		$content = new WikitextContent( $wikitext );
 
 		$parser_output = $this->contentRenderer->getParserOutput( $titleObj, null, $popts );
@@ -846,19 +846,19 @@ class SpecialGetDocbook extends SpecialPage {
 
 		foreach ( $dom->getElementsByTagName( 'table' ) as $table ) {
 			$classes = $table->getAttribute( 'class' );
-			$classes = explode( " ", $classes );
+			$classes = explode( ' ', $classes );
 			foreach ( $classes as $class ) {
-				if ( strpos( $class, "colwidth" ) !== false ) {
-					$colwidths = explode( "-", $class );
+				if ( strpos( $class, 'colwidth' ) !== false ) {
+					$colwidths = explode( '-', $class );
 					array_shift( $colwidths );
-					if ( $table->getElementsByTagName( "caption" )->length > 0 ) {
-						$table->insertBefore( $dom->createElement( "colgroup" ), $table->getElementsByTagName( "caption" )->item( 0 )->nextSibling );
+					if ( $table->getElementsByTagName( 'caption' )->length > 0 ) {
+						$table->insertBefore( $dom->createElement( 'colgroup' ), $table->getElementsByTagName( 'caption' )->item( 0 )->nextSibling );
 					} else {
-						$table->insertBefore( $dom->createElement( "colgroup" ), $table->firstChild );
+						$table->insertBefore( $dom->createElement( 'colgroup' ), $table->firstChild );
 					}
 					foreach ( $colwidths as $colwidth ) {
-						$col = $dom->createElement( "col" );
-						$col->setAttribute( "width", $colwidth . "%" );
+						$col = $dom->createElement( 'col' );
+						$col->setAttribute( 'width', $colwidth . '%' );
 						$table->getElementsByTagName( 'colgroup' )->item( 0 )->appendChild( $col );
 					}
 				}
@@ -868,9 +868,9 @@ class SpecialGetDocbook extends SpecialPage {
 		// Handle SMW Bug https://github.com/SemanticMediaWiki/SemanticMediaWiki/issues/4232
 		foreach ( $dom->getElementsByTagName( 'table' ) as $table ) {
 			if ( $table->getElementsByTagName( 'th' )->length > 0 && $table->getElementsByTagName( 'th' )->item( 0 )->parentNode->nodeName != 'tr' ) {
-				$table->getElementsByTagName( 'th' )->item( 0 )->parentNode->insertBefore( $dom->createElement( "tr" ), $table->getElementsByTagName( 'th' )->item( 0 ) );
+				$table->getElementsByTagName( 'th' )->item( 0 )->parentNode->insertBefore( $dom->createElement( 'tr' ), $table->getElementsByTagName( 'th' )->item( 0 ) );
 				$th_nodes = [];
-				while ( $th_node = $table->getElementsByTagName( "th" )->item( 0 ) ) {
+				while ( $th_node = $table->getElementsByTagName( 'th' )->item( 0 ) ) {
 					$th_nodes[] = $th_node->parentNode->removeChild( $th_node );
 				}
 				foreach ( $th_nodes as $th_node ) {
@@ -892,13 +892,13 @@ class SpecialGetDocbook extends SpecialPage {
 			if ( $this->repoGroup->findFile( basename( $file_url ) ) ) {
 				$file_path = $this->repoGroup->findFile( basename( $file_url ) )->getLocalRefPath();
 			} else {
-				if ( strpos( $file_url, "thumb" ) !== false ) {
-					$parts = explode( "px-", basename( $file_url ) );
+				if ( strpos( $file_url, 'thumb' ) !== false ) {
+					$parts = explode( 'px-', basename( $file_url ) );
 					$width = array_shift( $parts );
 					$file_name = array_shift( $parts );
 					$file = $this->repoGroup->findFile( $file_name );
 					if ( !$file ) {
-						if ( substr_count( $file_name, "." ) > 1 ) { // In case of filename.svg files the thumbnail file can be filename.svg.png
+						if ( substr_count( $file_name, '.' ) > 1 ) { // In case of filename.svg files the thumbnail file can be filename.svg.png
 							$file_name = substr( $file_name, 0, strrpos( $file_name, '.' ) );
 							$file = $this->repoGroup->findFile( $file_name );
 						}
@@ -927,8 +927,8 @@ class SpecialGetDocbook extends SpecialPage {
 
 		$html = mb_convert_encoding( $dom->saveHTML( $dom->documentElement ), 'ISO-8859-1', 'UTF-8' );
 
-		$html = str_replace( "</html>", "", $html );
-		$html = str_replace( "<html>", "", $html );
+		$html = str_replace( '</html>', '', $html );
+		$html = str_replace( '<html>', '', $html );
 		$html = cleanse( $html );
 
 		return $html;
@@ -961,7 +961,7 @@ class SpecialGetDocbook extends SpecialPage {
 			$pos += 4;
 			$offset = strpos( $page_html, "</$section_header>", $pos );
 			$title_html = substr( $page_html, $pos, $offset - $pos );
-			$title_html = str_replace( 'id="', 'id="_' . uniqid() . '_' . str_replace( " ", "_", $wikipage ) . '_', $title_html );
+			$title_html = str_replace( 'id="', 'id="_' . uniqid() . '_' . str_replace( ' ', '_', $wikipage ) . '_', $title_html );
 			if ( $section_level == 0 && $chapter_container ) {
 				$new_page_html .= '<chapter><title><html_pandoc>' . $title_html . '</html_pandoc></title>';
 			} else {
@@ -1039,7 +1039,7 @@ class SpecialGetDocbook extends SpecialPage {
 			} elseif ( $curChar == '\'' || $curChar == '"' ) {
 				$pos = self::findQuotedStringEnd( $string, $curChar, $i + 1 );
 				if ( $pos === false ) {
-					throw new MWException( "Error: unmatched quote in SQL string constant." );
+					throw new MWException( 'Error: unmatched quote in SQL string constant.' );
 				}
 				$curReturnValue .= substr( $string, $i, $pos - $i );
 				$i = $pos;
@@ -1057,7 +1057,7 @@ class SpecialGetDocbook extends SpecialPage {
 		$returnValues[] = trim( $curReturnValue );
 
 		if ( $ignoreNextChar ) {
-			throw new MWException( "Error: incomplete escape sequence." );
+			throw new MWException( 'Error: incomplete escape sequence.' );
 		}
 
 		if ( $includeBlankValues ) {
@@ -1095,11 +1095,11 @@ function rrmdir( $dir ) {
 	if ( is_dir( $dir ) ) {
 		$objects = scandir( $dir );
 		foreach ( $objects as $object ) {
-			if ( $object != "." && $object != ".." ) {
-				if ( is_dir( $dir . "/" . $object ) ) {
-					rrmdir( $dir . "/" . $object );
+			if ( $object != '.' && $object != '..' ) {
+				if ( is_dir( $dir . '/' . $object ) ) {
+					rrmdir( $dir . '/' . $object );
 				} else {
-					unlink( $dir . "/" . $object );
+					unlink( $dir . '/' . $object );
 				}
 			}
 		}
@@ -1122,7 +1122,7 @@ function cleanse( $string, $allowedTags = [] ) {
 	$string = str_replace( $search, $replace, $string );
 	$string = str_replace( '&acirc;€', '&rdquo;', $string );
 
-	$search = [ "&#39;", "\xc3\xa2\xc2\x80\xc2\x99", "\xc3\xa2\xc2\x80\xc2\x93", "\xc3\xa2\xc2\x80\xc2\x9d", "\xc3\xa2\x3f\x3f" ];
+	$search = [ '&#39;', "\xc3\xa2\xc2\x80\xc2\x99", "\xc3\xa2\xc2\x80\xc2\x93", "\xc3\xa2\xc2\x80\xc2\x9d", "\xc3\xa2\x3f\x3f" ];
 	$resplace = [ "'", "'", ' - ', '"', "'" ];
 
 	$string = str_replace( $search, $replace, $string );
@@ -1141,19 +1141,19 @@ function cleanse( $string, $allowedTags = [] ) {
 		"\xE2\x80\xB9" => "'",
 		"\xE2\x80\xBA" => "'",
 		"\xe2\x80\x93" => "-",
-		"\xc2\xb0"	   => "°",
+		"\xc2\xb0"     => "°",
 		"\xc2\xba"     => "°",
-		"\xc3\xb1"	   => "&#241;",
-		"\x96"		   => "&#241;",
+		"\xc3\xb1"     => "&#241;",
+		"\x96"         => "&#241;",
 		"\xe2\x81\x83" => '&bull;'
 	];
 	$string = strtr( $string, $quotes );
 	/*
 	// Use the below to get the byte of the special char and put it in the array above + the replacement.
 
-	if (strpos($string, "Live Wave Buoy Data") !== false)
+	if (strpos($string, 'Live Wave Buoy Data') !== false)
 	{
-		for ($i=strpos($string, "Live Wave Buoy Data") ; $i<strlen($string) ; $i++) {
+		for ($i=strpos($string, 'Live Wave Buoy Data') ; $i<strlen($string) ; $i++) {
 			$byte = $string[$i];
 			$char = ord($byte);
 			printf('%s:0x%02x ', $byte, $char);
