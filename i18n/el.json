@@ -1,0 +1,9 @@
+{
+	"@metadata": {
+		"authors": [
+			"Jimkats"
+		]
+	},
+	"getdocbook": "Λήψη DocBook",
+	"apihelp-getdocbook-summary": "Δημιουργία DocBook από μια σελίδα wiki"
+}
